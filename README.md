@@ -22,3 +22,10 @@ Not yet implemented:
 - Architecture drift tracking
 - Contributor modeling
 - Multi-language support
+
+# Roadmap
+- Stage 1: Structural intelligence ✅
+- Stage 2: Temporal evolution tracking
+- Stage 3: PR-level structural cognition
+- Stage 4: Governance & contributor modeling
+- Stage 5: AI Project Brain
