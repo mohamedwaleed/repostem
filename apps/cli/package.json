@@ -1,0 +1,19 @@
+{
+  "name": "@repostem/cli",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "bin": {
+    "repostem": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@repostem/core": "workspace:*",
+    "@types/lodash": "^4.17.24",
+    "lodash": "^4.18.0"
+  }
+}
