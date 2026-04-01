@@ -82,9 +82,19 @@ For each file:
 {
   "file": "src/auth/token.ts",
   "imports": [
-    "src/db/client.ts",
-    "src/utils/logger.ts"
-  ]
+    {
+        source: "./controllers/user-controller",
+        resolvedPath: "src/controllers/user-controller.ts",  // ✅ Relative to repo root
+        isExternal: false
+    }
+    {
+        source: "./services/user-service",
+        resolvedPath: "src/services/user-service.ts",        // ✅ Relative to repo root
+        isExternal: false
+    },
+    { source: 'typescript', resolvedPath: null, isExternal: true }
+  ],
+  exports: []
 }
 ```
 
