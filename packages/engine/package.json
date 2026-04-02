@@ -5,9 +5,14 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
     "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.2"
   }
 }

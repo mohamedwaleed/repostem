@@ -6,7 +6,9 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",
-    "clean": "pnpm -r exec rm -rf dist node_modules"
+    "clean": "pnpm -r exec rm -rf dist node_modules",
+    "test:engine": "pnpm --filter @repostem/engine test",
+    "test:engine:watch": "pnpm --filter @repostem/engine test:watch"
   },
   "keywords": [
     "architecture",
