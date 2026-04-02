@@ -1,19 +1,17 @@
 
 import { Language } from "../types";
-import { TypeScriptParser } from "./languages/typescript";
-import { JavaScriptParser } from "./languages/javascript";
+import { TypeScriptParser } from "./languages/typescript/typescript";
+import { JavaScriptParser } from "./languages/javascript/javascript";
 
 const parsers = {
     [Language.typescript]: new TypeScriptParser(),
     [Language.javascript]: new JavaScriptParser()
 };
 export default function getLanguageParser(language: Language) {
-    switch (language) {
-        case Language.typescript:
-            return parsers[Language.typescript];
-        case Language.javascript:
-            return parsers[Language.javascript];
-        default:
-            throw new Error("Unsupported language");
+
+    if(!Object.keys(parsers).includes(language)) {
+        throw new Error("Unsupported language");
     }
+    
+    return parsers[language];
 }

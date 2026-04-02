@@ -12,8 +12,7 @@ function parseFile(filePath: string, parseOptions: ParseOptions, repositoryRoot:
     const parsedSyntax = languageParser.parse(fileContent, filePath, repositoryRoot);
     return {
         path: path.relative(repositoryRoot, filePath),
-        imports: parsedSyntax.imports,
-        exports: parsedSyntax.exports,
+        syntax: parsedSyntax,
         metadata: {
             size: statSync(filePath).size,
             extension: path.extname(filePath)
@@ -61,9 +60,3 @@ export default function parseRepository(repositoryPath: string, parseOptions: Pa
     }
     return parseRepositoryFiles(repositoryPath, parseOptions);
 }
-
-parseFile(
-    "/Users/mohamedmohamed/Desktop/projects/repostem/examples/sample-repo/src/app.ts",
-    { language: Language.typescript },
-    "/Users/mohamedmohamed/Desktop/projects/repostem/examples/sample-repo"
-);

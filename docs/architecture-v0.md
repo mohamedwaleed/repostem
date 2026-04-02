@@ -71,8 +71,7 @@ Reads source files and extracts structural information using AST parsing.
 
 ### Extracted Information:
 For each file:
-- Import statements
-- Export statements (optional)
+- Structured Syntax (import statements)
 - File path
 - Basic metadata (size, extension)
 
@@ -81,20 +80,25 @@ For each file:
 ```json
 {
   "file": "src/auth/token.ts",
-  "imports": [
-    {
-        source: "./controllers/user-controller",
-        resolvedPath: "src/controllers/user-controller.ts",  // ✅ Relative to repo root
-        isExternal: false
-    }
-    {
-        source: "./services/user-service",
-        resolvedPath: "src/services/user-service.ts",        // ✅ Relative to repo root
-        isExternal: false
-    },
-    { source: 'typescript', resolvedPath: null, isExternal: true }
-  ],
-  exports: []
+  "syntax": {
+    "imports": [
+        {
+            source: "./controllers/user-controller",
+            resolvedPath: "src/controllers/user-controller.ts",  // ✅ Relative to repo root
+            isExternal: false
+        },
+        {
+            source: "./services/user-service",
+            resolvedPath: "src/services/user-service.ts",        // ✅ Relative to repo root
+            isExternal: false
+        },
+        { source: 'typescript', resolvedPath: null, isExternal: true }
+    ]
+  },
+  "metadata": {
+    "size": 1024,
+    "extension": ".ts"
+  }
 }
 ```
 

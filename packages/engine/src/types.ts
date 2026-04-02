@@ -1,7 +1,6 @@
 export interface ParsedFile {
     path: string;
-    imports: ParsedImport[];
-    exports: ParsedExport[];
+    syntax: ParsedSyntax;
     metadata: FileMetadata;
 }
 
@@ -9,11 +8,6 @@ export interface ParsedImport {
   source: string;
   resolvedPath: string | null;
   isExternal: boolean;
-}
-
-export interface ParsedExport {
-  name: string;
-  kind: string;
 }
 
 export interface FileMetadata {
@@ -34,13 +28,11 @@ export enum Language {
     javascript = "javascript"
 }
 
-export enum Syntax {
+export enum SyntaxType {
     import_statement = "import_statement",
     export_statement = "export_statement"
 }
 
 export interface ParsedSyntax {
-    imports: ParsedImport[];
-    exports: ParsedExport[];
-    // Future: classes, functions, etc.
+    [key: string]: any[];
 }
