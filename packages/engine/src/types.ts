@@ -30,7 +30,9 @@ export enum Language {
 
 export enum SyntaxType {
     import_statement = "import_statement",
-    export_statement = "export_statement"
+    export_statement = "export_statement",
+    require_statement = "require_statement",
+    expression_statement = "expression_statement"
 }
 
 export interface ParsedSyntax {

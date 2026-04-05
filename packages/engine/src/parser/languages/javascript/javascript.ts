@@ -17,7 +17,7 @@ export class JavaScriptParser implements ILanguageParser {
     ]);
   }
   
-  parse(fileContent: string, currentFilePath?: string, repositoryRoot?: string): ParsedSyntax {
+  parse(fileContent: string, currentFilePath: string, repositoryRoot: string): ParsedSyntax {
     const tree = this.parser.parse(fileContent);
     return this.processorFactory.processAll(tree.rootNode.children, {
       currentFilePath,
