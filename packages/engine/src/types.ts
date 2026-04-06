@@ -38,3 +38,7 @@ export enum SyntaxType {
 export interface ParsedSyntax {
     [key: string]: any[];
 }
+
+export enum DependencyGraphType {
+    inMemory = 'in-memory'
+}
