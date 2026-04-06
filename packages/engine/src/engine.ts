@@ -1,4 +1,8 @@
+import parseRepository from "./parser/parser";
+import { buildDependencyGraph } from "./dependency-graph/dependency-graph";
+
 export function analyze(projectPath: string) {
-    // TODO: Implement analysis logic
-    console.log("Analyzing...", projectPath);
+    const structuredDependenciesData = parseRepository(projectPath);
+    const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
+    return { structuredDependenciesData, dependencyGraph };
 }
