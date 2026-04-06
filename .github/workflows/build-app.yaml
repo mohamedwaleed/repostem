@@ -1,0 +1,15 @@
+name: build-app
+run-name: ${{ github.actor }} is building the app
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install -g pnpm
+      - run: pnpm install
+      - run: pnpm -r test
+      - run: pnpm -r build
