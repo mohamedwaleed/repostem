@@ -1,3 +1,5 @@
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![CI](https://github.com/mohamedwaleed/repostem/actions/workflows/build-app.yaml/badge.svg) ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue) ![Status](https://img.shields.io/badge/status-experimental-orange)
+
 # RepoStem - AI-powered architecture and structural risk analysis for repositories
 
 RepoStem is a model that analyzes a repository as a dependency graph, computes architectural risk metrics, and uses AI to explain structural fragility before changes cause damage.
