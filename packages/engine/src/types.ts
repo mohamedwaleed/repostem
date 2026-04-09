@@ -42,3 +42,12 @@ export interface ParsedSyntax {
 export enum DependencyGraphType {
     inMemory = 'in-memory'
 }
+
+export interface Cycle {
+  nodes: string[];
+}
+
+export interface MetricContext {
+    maxCommits: number;
+    totalFiles: number;
+}
