@@ -53,6 +53,37 @@ export interface MetricContext {
 }
 
 export interface FileAnalysis {
-    risk: number;
+    file: string;
+    riskScore: number;
     metrics: Record<string, number>;
+}
+
+export interface RankedFile {
+  file: string;
+  score: number;
+}
+
+export interface ProjectAnalysisResult {
+  totalFiles: number;
+  totalDependencies: number;
+  cycleCount: number;
+  topCentralFiles: RankedFile[];
+  topRiskFiles: RankedFile[];
+  highChurnFiles: RankedFile[];
+}
+
+export interface FileRiskResult {
+  file: string;
+  centrality: number;
+  coupling: number;
+  churn: number;
+  hasCircularDependency: boolean;
+  riskScore: number;
+}
+
+export interface FileImpactResult {
+  file: string;
+  directDependents: string[];
+  transitiveDependents: string[];
+  totalImpactCount: number;
 }
