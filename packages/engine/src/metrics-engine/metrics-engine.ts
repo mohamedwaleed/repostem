@@ -2,8 +2,8 @@
 import IGraph from "../dependency-graph/graph-implementations/graph-interface";
 import { MetricsComputer } from "./metrics-computer";
 
-export const computeMetrics = (dependencyGraph: IGraph) => {
+export async function computeMetrics(dependencyGraph: IGraph) {
     const metricsComputer = new MetricsComputer();
-    const fileMetrics = metricsComputer.computeMetrics(dependencyGraph);
+    const fileMetrics = await metricsComputer.computeMetrics(dependencyGraph);
     return fileMetrics;
 }
