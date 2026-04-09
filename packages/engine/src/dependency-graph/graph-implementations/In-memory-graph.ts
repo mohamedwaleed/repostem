@@ -58,106 +58,90 @@ export class InMemoryGraph implements IGraph {
 
 
     private getCycles(): Cycle[] {
-        // tarjan's algorithm
         const nodes = Array.from(this.nodes.keys());
         if (nodes.length === 0) return [];
         
         const visited: Set<string> = new Set();
-        const timeOfInsertion: Map<string, number> = new Map();
-        const lowestTimeOfInsertion: Map<string, number> = new Map();
-        let time = 1;
+        const discoveryTime: Map<string, number> = new Map();
+        const lowestReachable: Map<string, number> = new Map();
+        const inCurrentPath: Set<string> = new Set();
+        const componentStack: string[] = [];
+        const stronglyConnectedComponents: Cycle[] = [];
+        let time = 0;
         
         for (const startNode of nodes) {
-            if (visited.has(startNode)) continue;
-            
-            const stack: {filePath: string, visiting: boolean}[] = [{filePath: startNode, visiting: true}];
-            visited.add(startNode);
-            while(stack.length > 0) {
-                const node = stack.pop()!;
-                const files = this.edges.get(node.filePath) || new Set<string>();
-                if(node.visiting) {
-                    stack.push({filePath: node.filePath, visiting: false});
-                    node.visiting = false;
-                    timeOfInsertion.set(node.filePath, time);
-                    lowestTimeOfInsertion.set(node.filePath, time);
-                    time++;
-        
-                    for(const file of files) {
-                        if(!visited.has(file)) {
-                            visited.add(file);
-                            stack.push({filePath: file, visiting: true});
-                        } else if(timeOfInsertion.has(file)) {
-                            lowestTimeOfInsertion.set(node.filePath, Math.min(
-                                lowestTimeOfInsertion.get(node.filePath)!,
-                                timeOfInsertion.get(file)!
-                            ));
-                        }
-                    }
-                } else {
-                    for(const file of files) {
-                        if(lowestTimeOfInsertion.has(file)) {
-                            lowestTimeOfInsertion.set(node.filePath, Math.min(
-                                lowestTimeOfInsertion.get(node.filePath)!,
-                                lowestTimeOfInsertion.get(file)!
-                            ));
-                        }
-                    }
-                }
-            }
-        }
-
-        const cyclesMap: Map<number, string[]> = new Map();
-        for(const node of this.nodes.keys()) {
-            const lowestTime = lowestTimeOfInsertion.get(node);
-            if(lowestTime !== undefined) {
-                if(cyclesMap.has(lowestTime)) {
-                    cyclesMap.get(lowestTime)!.push(node);
-                } else {
-                    cyclesMap.set(lowestTime, [node]);
-                }
+            if (!visited.has(startNode)) {
+                time = this.tarjanSCC(startNode, visited, discoveryTime, lowestReachable, inCurrentPath, componentStack, stronglyConnectedComponents, time);
             }
         }
         
-        const cycles: Cycle[] = Array.from(cyclesMap.values())
-            .filter(nodes => {
-                if (nodes.length <= 1) return false;
-                // Verify this is actually a cycle by checking if nodes form a strongly connected component
-                for (const node of nodes) {
-                    const reachable = this.getReachableNodes(node, new Set(nodes));
-                    if (reachable.size !== nodes.length) return false;
-                }
-                return true;
-            })
-            .map(nodes => ({nodes}));
-        
-        // add self-loops detection
-        for(const node of this.nodes.keys()) {
-            const edges = this.edges.get(node);
-            if(edges && edges.has(node)) {
-                cycles.push({nodes: [node]});
-            }
-        }
-        
-        return cycles;
+        return stronglyConnectedComponents.filter(component => 
+            component.nodes.length > 1 || 
+            (component.nodes.length === 1 && this.edges.get(component.nodes[0])?.has(component.nodes[0]))
+        );
     }
 
-    private getReachableNodes(start: string, allowedNodes: Set<string>): Set<string> {
-        const reachable = new Set<string>();
-        const queue = [start];
-        reachable.add(start);
-        
-        while (queue.length > 0) {
-            const current = queue.shift()!;
-            const neighbors = this.edges.get(current) || new Set<string>();
+    private tarjanSCC(
+        startNode: string,
+        visited: Set<string>,
+        discoveryTime: Map<string, number>,
+        lowestReachable: Map<string, number>,
+        inCurrentPath: Set<string>,
+        componentStack: string[],
+        stronglyConnectedComponents: Cycle[],
+        time: number
+    ): number {
+        const stack: Array<{node: string, visiting: boolean, childIndex: number}> = [
+            {node: startNode, visiting: true, childIndex: 0}
+        ];
+
+        while (stack.length > 0) {
+            const frame = stack[stack.length - 1];
+            const {node, visiting, childIndex} = frame;
+
+            if (visiting) {
+                visited.add(node);
+                discoveryTime.set(node, time);
+                lowestReachable.set(node, time);
+                time++;
+                inCurrentPath.add(node);
+                componentStack.push(node);
+                frame.visiting = false;
+            }
+
+            const neighbors = Array.from(this.edges.get(node) || []);
             
-            for (const neighbor of neighbors) {
-                if (allowedNodes.has(neighbor) && !reachable.has(neighbor)) {
-                    reachable.add(neighbor);
-                    queue.push(neighbor);
+            if (childIndex < neighbors.length) {
+                const neighbor = neighbors[childIndex];
+                frame.childIndex++;
+
+                if (!visited.has(neighbor)) {
+                    stack.push({node: neighbor, visiting: true, childIndex: 0});
+                } else if (inCurrentPath.has(neighbor)) {
+                    lowestReachable.set(node, Math.min(lowestReachable.get(node)!, discoveryTime.get(neighbor)!));
+                }
+            } else {
+                stack.pop();
+
+                if (stack.length > 0) {
+                    const parent = stack[stack.length - 1].node;
+                    lowestReachable.set(parent, Math.min(lowestReachable.get(parent)!, lowestReachable.get(node)!));
+                }
+
+                if (lowestReachable.get(node) === discoveryTime.get(node)) {
+                    const componentNodes: string[] = [];
+                    let currentNode: string;
+                    do {
+                        currentNode = componentStack.pop()!;
+                        inCurrentPath.delete(currentNode);
+                        componentNodes.push(currentNode);
+                    } while (currentNode !== node);
+                    
+                    stronglyConnectedComponents.push({nodes: componentNodes});
                 }
             }
         }
-        
-        return reachable;
+
+        return time;
     }
 }

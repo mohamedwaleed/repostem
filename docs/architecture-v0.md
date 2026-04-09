@@ -425,9 +425,8 @@ Detects structural cycles which increase fragility.
 
 Use:
 
-- Depth-First Search (DFS)
-OR
 - Strongly Connected Components (Tarjan’s Algorithm)
+- Stack implementation for efficient cycle detection
 
 If file `F` belongs to a cycle of size > 1:
 

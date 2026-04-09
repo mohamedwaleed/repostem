@@ -46,3 +46,8 @@ export enum DependencyGraphType {
 export interface Cycle {
   nodes: string[];
 }
+
+export interface MetricContext {
+    maxCommits: number;
+    totalFiles: number;
+}
