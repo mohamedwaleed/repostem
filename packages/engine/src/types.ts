@@ -51,3 +51,8 @@ export interface MetricContext {
     maxCommits: number;
     totalFiles: number;
 }
+
+export interface FileAnalysis {
+    risk: number;
+    metrics: Record<string, number>;
+}
