@@ -3,6 +3,7 @@ import { buildDependencyGraph } from "./dependency-graph/dependency-graph";
 import { computeFileMetrics, computeMetrics } from "./metrics-engine/metrics-engine";
 import { computeRisk } from "./risk-engine/risk-engine";
 import { Cycle, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile } from "./types";
+import { explainFileRiskUsingAI } from "./ai-explanation-layer/ai-explaination-layer";
 
 interface MetricConfig {
     key: string;
@@ -120,7 +121,7 @@ export async function detectRepositoryCycles(repoPath: string): Promise<Cycle[]>
 }
 
 // AI explanation
-export async function explainFileRisk(repoPath: string, filePath: string): Promise<string> {
+export async function explainFileRisk(repoPath: string, filePath: string, useAI: boolean = true): Promise<string> {
     const structuredDependenciesData = parseRepository(repoPath);
     const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
     
@@ -132,6 +133,8 @@ export async function explainFileRisk(repoPath: string, filePath: string): Promi
     const metricsMap = new Map([[filePath, fileMetrics]]);
     const [fileAnalysis] = computeRisk(metricsMap);
     
-    //@TODO: call AI service to explain the risk
+    if (useAI) {
+        return await explainFileRiskUsingAI(fileAnalysis);
+    }
     return `The file ${filePath} has a risk score of ${fileAnalysis.riskScore}. It has a centrality of ${fileMetrics.centrality}, a coupling of ${fileMetrics.coupling}, and a churn of ${fileMetrics.churn}.`;
 }

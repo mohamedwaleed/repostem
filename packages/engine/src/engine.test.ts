@@ -9,6 +9,13 @@ import {
 } from './engine';
 import { ProjectAnalysisResult, FileRiskResult, FileImpactResult, Cycle } from './types';
 
+// Mock AI explanation layer
+vi.mock('./ai-explanation-layer/ai-explaination-layer', () => ({
+    explainFileRiskUsingAI: vi.fn((fileAnalysis: any) => {
+        return `AI explanation for ${fileAnalysis.file} with risk score ${fileAnalysis.riskScore}`;
+    })
+}));
+
 const sharedFixturesRoot = path.resolve(__dirname, "__tests__", "fixtures", "shared");
 const basicRepoPath = path.join(sharedFixturesRoot, "basic-repo");
 
@@ -446,26 +453,14 @@ describe('Engine - explainFileRisk', () => {
             expect(result).toMatch(/risk score/i);
         });
 
-        it('should include centrality metric in explanation', async () => {
+        it('should include file path in AI explanation', async () => {
             const filePath = path.join('src', 'index.ts');
             const result = await explainFileRisk(basicRepoPath, filePath);
 
-            expect(result).toMatch(/centrality/i);
+            expect(result).toContain(filePath);
         });
 
-        it('should include coupling metric in explanation', async () => {
-            const filePath = path.join('src', 'index.ts');
-            const result = await explainFileRisk(basicRepoPath, filePath);
 
-            expect(result).toMatch(/coupling/i);
-        });
-
-        it('should include churn metric in explanation', async () => {
-            const filePath = path.join('src', 'index.ts');
-            const result = await explainFileRisk(basicRepoPath, filePath);
-
-            expect(result).toMatch(/churn/i);
-        });
 
         it('should throw error for non-existent file', async () => {
             const nonExistentFile = 'src/non-existent.ts';
@@ -483,6 +478,58 @@ describe('Engine - explainFileRisk', () => {
             const result2 = await explainFileRisk(basicRepoPath, file2);
 
             expect(result1).not.toBe(result2);
+        });
+    });
+
+    describe('useAI Parameter', () => {
+        it('should use AI explanation when useAI is true', async () => {
+            const filePath = path.join('src', 'index.ts');
+            const result = await explainFileRisk(basicRepoPath, filePath, true);
+
+            expect(typeof result).toBe('string');
+            expect(result).toContain('AI explanation');
+            expect(result).toContain(filePath);
+        });
+
+        it('should use simple template when useAI is false', async () => {
+            const filePath = path.join('src', 'index.ts');
+            const result = await explainFileRisk(basicRepoPath, filePath, false);
+
+            expect(typeof result).toBe('string');
+            expect(result).toContain(filePath);
+            expect(result).toMatch(/risk score/i);
+            expect(result).toMatch(/centrality/i);
+            expect(result).toMatch(/coupling/i);
+            expect(result).toMatch(/churn/i);
+        });
+
+        it('should return different output formats based on useAI parameter', async () => {
+            const filePath = path.join('src', 'index.ts');
+            
+            const resultWithAI = await explainFileRisk(basicRepoPath, filePath, true);
+            const resultWithoutAI = await explainFileRisk(basicRepoPath, filePath, false);
+
+            expect(resultWithAI).not.toBe(resultWithoutAI);
+            expect(resultWithAI).toContain('AI explanation');
+            expect(resultWithoutAI).not.toContain('AI explanation');
+        });
+
+        it('should include file path in both AI and non-AI explanations', async () => {
+            const filePath = path.join('src', 'index.ts');
+            
+            const resultWithAI = await explainFileRisk(basicRepoPath, filePath, true);
+            const resultWithoutAI = await explainFileRisk(basicRepoPath, filePath, false);
+
+            expect(resultWithAI).toContain(filePath);
+            expect(resultWithoutAI).toContain(filePath);
+        });
+
+        it('should default to using AI when useAI parameter is omitted', async () => {
+            const filePath = path.join('src', 'index.ts');
+            const resultWithoutParam = await explainFileRisk(basicRepoPath, filePath);
+            const resultWithTrue = await explainFileRisk(basicRepoPath, filePath, true);
+
+            expect(resultWithoutParam).toBe(resultWithTrue);
         });
     });
 

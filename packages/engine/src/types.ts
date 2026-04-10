@@ -87,3 +87,7 @@ export interface FileImpactResult {
   transitiveDependents: string[];
   totalImpactCount: number;
 }
+
+export enum AIProvider {
+    OPENAI = "openai"
+}
