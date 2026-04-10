@@ -16,7 +16,7 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
 
             expect(result).toHaveLength(1);
-            expect(result[0].risk).toBe(0);
+            expect(result[0].riskScore).toBe(0);
             expect(result[0].metrics).toEqual({
                 centrality: 0,
                 coupling: 0,
@@ -38,7 +38,7 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
 
             expect(result).toHaveLength(1);
-            expect(result[0].risk).toBe(1);
+            expect(result[0].riskScore).toBe(1);
             expect(result[0].metrics).toEqual({
                 centrality: 1,
                 coupling: 1,
@@ -58,7 +58,7 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
-            expect(result[0].risk).toBe(0.3);
+            expect(result[0].riskScore).toBe(0.3);
         });
 
         it('should calculate weighted risk correctly for coupling only', () => {
@@ -72,7 +72,7 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
-            expect(result[0].risk).toBe(0.25);
+            expect(result[0].riskScore).toBe(0.25);
         });
 
         it('should calculate weighted risk correctly for circular dependency only', () => {
@@ -86,7 +86,7 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
-            expect(result[0].risk).toBe(0.25);
+            expect(result[0].riskScore).toBe(0.25);
         });
 
         it('should calculate weighted risk correctly for churn only', () => {
@@ -100,7 +100,7 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
-            expect(result[0].risk).toBe(0.2);
+            expect(result[0].riskScore).toBe(0.2);
         });
 
         it('should compute risk for multiple files', () => {
@@ -130,14 +130,14 @@ describe('Risk Engine', () => {
             expect(result).toHaveLength(3);
             
             const file1Risk = 0.3 * 0.8 + 0.25 * 0.6 + 0.25 * 0 + 0.2 * 0.4;
-            expect(result[0].risk).toBeCloseTo(file1Risk, 10);
+            expect(result[0].riskScore).toBeCloseTo(file1Risk, 10);
             expect(result[0].metrics).toEqual(fileMetrics.get('file1.ts'));
 
             const file2Risk = 0.3 * 0.2 + 0.25 * 0.3 + 0.25 * 1 + 0.2 * 0.1;
-            expect(result[1].risk).toBeCloseTo(file2Risk, 10);
+            expect(result[1].riskScore).toBeCloseTo(file2Risk, 10);
             expect(result[1].metrics).toEqual(fileMetrics.get('file2.ts'));
 
-            expect(result[2].risk).toBe(0);
+            expect(result[2].riskScore).toBe(0);
             expect(result[2].metrics).toEqual(fileMetrics.get('file3.ts'));
         });
 
@@ -153,8 +153,8 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 0.5 + 0.25 * 0.5 + 0.25 * 0.5 + 0.2 * 0.5;
-            expect(result[0].risk).toBeCloseTo(expectedRisk, 10);
-            expect(result[0].risk).toBe(0.5);
+            expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskScore).toBe(0.5);
         });
 
         it('should preserve metric precision in output', () => {
@@ -193,7 +193,7 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 1 + 0.25 * 0.1 + 0.25 * 0 + 0.2 * 0.05;
-            expect(result[0].risk).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
         });
 
         it('should handle files with high churn but low structural metrics', () => {
@@ -208,7 +208,7 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 0.1 + 0.25 * 0.1 + 0.25 * 0 + 0.2 * 1;
-            expect(result[0].risk).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
         });
 
         it('should handle files in circular dependencies with moderate other metrics', () => {
@@ -223,7 +223,7 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 0.5 + 0.25 * 0.6 + 0.25 * 1 + 0.2 * 0.3;
-            expect(result[0].risk).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
         });
 
         it('should maintain file order from input map', () => {
@@ -256,7 +256,7 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
             
             const expectedRisk = 0.3 * 0.5 + 0.25 * 0.5 + 0.25 * 0.5 + 0.2 * 0.5;
-            expect(result[0].risk).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
             expect(result[0].metrics.extraMetric).toBe(0.9);
             expect(result[0].metrics.anotherMetric).toBe(1.0);
         });
@@ -288,15 +288,15 @@ describe('Risk Engine', () => {
             expect(result).toHaveLength(3);
             
             const helperRisk = 0.3 * 0.75 + 0.25 * 0.6 + 0.25 * 0 + 0.2 * 0.3;
-            expect(result[0].risk).toBeCloseTo(helperRisk, 10);
+            expect(result[0].riskScore).toBeCloseTo(helperRisk, 10);
 
             const buttonRisk = 0.3 * 0.2 + 0.25 * 0.4 + 0.25 * 0 + 0.2 * 0.8;
-            expect(result[1].risk).toBeCloseTo(buttonRisk, 10);
+            expect(result[1].riskScore).toBeCloseTo(buttonRisk, 10);
 
             const apiRisk = 0.3 * 0.9 + 0.25 * 0.85 + 0.25 * 1 + 0.2 * 0.5;
-            expect(result[2].risk).toBeCloseTo(apiRisk, 10);
-            expect(result[2].risk).toBeGreaterThan(result[0].risk);
-            expect(result[2].risk).toBeGreaterThan(result[1].risk);
+            expect(result[2].riskScore).toBeCloseTo(apiRisk, 10);
+            expect(result[2].riskScore).toBeGreaterThan(result[0].riskScore);
+            expect(result[2].riskScore).toBeGreaterThan(result[1].riskScore);
         });
 
         it('should verify weights sum to 1.0', () => {
@@ -317,9 +317,9 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 0.0001 + 0.25 * 0.0002 + 0.25 * 0 + 0.2 * 0.0003;
-            expect(result[0].risk).toBeCloseTo(expectedRisk, 10);
-            expect(result[0].risk).toBeGreaterThan(0);
-            expect(result[0].risk).toBeLessThan(0.001);
+            expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskScore).toBeGreaterThan(0);
+            expect(result[0].riskScore).toBeLessThan(0.001);
         });
 
         it('should handle files with values at boundaries (0 and 1)', () => {
@@ -334,8 +334,8 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 1 + 0.25 * 0 + 0.25 * 1 + 0.2 * 0;
-            expect(result[0].risk).toBe(expectedRisk);
-            expect(result[0].risk).toBe(0.55);
+            expect(result[0].riskScore).toBe(expectedRisk);
+            expect(result[0].riskScore).toBe(0.55);
         });
     });
 });

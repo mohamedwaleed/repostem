@@ -67,4 +67,20 @@ export class MetricsComputer {
         
         return fileMetrics;
     }
+
+    async computeFileMetrics(dependencyGraph: IGraph, filePath: string) {
+        const nodes = Array.from(dependencyGraph.getNodes().keys());
+        const maxCommits = await this.calculateMaxCommits(nodes);
+        const context: MetricContext = {
+            maxCommits,
+            totalFiles: nodes.length
+        };
+        
+        const metricsForFile: Record<string, number> = {};
+        for (const metric of this.metrics) {
+            const result = metric.compute(dependencyGraph, filePath, context);
+            metricsForFile[metric.key] = result instanceof Promise ? await result : result;
+        }
+        return metricsForFile;
+    }
 }

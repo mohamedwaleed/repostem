@@ -38,6 +38,37 @@ export class InMemoryGraph implements IGraph {
     getOutDegree(node: string): number {
         return this.edges.get(node)?.size || 0;
     }
+
+    getDirectDependent(node: string): string[] {
+        let directDependents: string[] = [];
+        for(const [file, dependencies] of this.edges) {
+            if(dependencies.has(node)) {
+                directDependents.push(file);
+            }
+        }
+        return directDependents;
+    }
+
+    getTransitiveDependents(node: string): string[] {
+        const transitiveDependents: string[] = [];
+        const visited: Set<string> = new Set([node]);
+        const queue: string[] = [node];
+        
+        while (queue.length > 0) {
+            const current = queue.shift()!;
+            
+            const dependents = this.getDirectDependent(current);
+            for (const dependent of dependents) {
+                if (!visited.has(dependent)) {
+                    visited.add(dependent);
+                    transitiveDependents.push(dependent);
+                    queue.push(dependent);
+                }
+            }
+        }
+        
+        return transitiveDependents;
+    }
     
     detectCycles(): Cycle[] {
         if(this.needRecalculation) {

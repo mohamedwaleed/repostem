@@ -11,14 +11,15 @@ export const computeRisk = (fileMetrics: Map<string, Record<string, number>>): F
     const files = Array.from(fileMetrics.keys());
     return files.map((file) => {
         const metrics = fileMetrics.get(file)!;
-        const risk = 
+        const riskScore = 
             WEIGHTS.centrality * metrics.centrality +
             WEIGHTS.coupling * metrics.coupling +
             WEIGHTS.circularDependency * metrics.circularDependency +
             WEIGHTS.churn * metrics.churn;
         
         return {
-            risk,
+            file,
+            riskScore,
             metrics,
         };
     });
