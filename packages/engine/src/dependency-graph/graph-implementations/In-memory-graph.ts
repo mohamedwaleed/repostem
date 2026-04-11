@@ -7,6 +7,7 @@ export class InMemoryGraph implements IGraph {
     private edges: Map<string, Set<string>> = new Map(); // still use paths for edges
     private cycles: Cycle[] = [];
     private needRecalculation: boolean = true;
+    private repositoryRoot: string = '';
 
     addNode(node: ParsedFile): void {
         this.nodes.set(node.path, node);
@@ -85,6 +86,14 @@ export class InMemoryGraph implements IGraph {
     
     getEdges(): Map<string, Set<string>> {
         return this.edges;
+    }
+
+    getRepositoryRoot(): string {
+        return this.repositoryRoot;
+    }
+
+    setRepositoryRoot(root: string): void {
+        this.repositoryRoot = root;
     }
 
 

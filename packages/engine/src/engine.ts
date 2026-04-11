@@ -2,12 +2,12 @@ import parseRepository from "./parser/parser";
 import { buildDependencyGraph } from "./dependency-graph/dependency-graph";
 import { computeFileMetrics, computeMetrics } from "./metrics-engine/metrics-engine";
 import { computeRisk } from "./risk-engine/risk-engine";
-import { Cycle, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile } from "./types";
+import { Cycle, FileAnalysis, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile } from "./types";
 import { explainFileRiskUsingAI } from "./ai-explanation-layer/ai-explaination-layer";
 
 interface MetricConfig {
     key: string;
-    extractValue: (fileAnalysis: any, metrics: any) => number;
+    extractValue: (fileAnalysis: FileAnalysis, metrics: any) => number;
     threshold?: number;
     sortDescending?: boolean;
 }
@@ -19,8 +19,8 @@ const METRIC_CONFIGS: MetricConfig[] = [
         sortDescending: true
     },
     {
-        key: 'score',
-        extractValue: (_, metrics) => metrics?.riskScore || 0,
+        key: 'riskScore',
+        extractValue: (fileAnalysis) => fileAnalysis?.riskScore || 0,
         sortDescending: true
     },
     {
@@ -32,7 +32,7 @@ const METRIC_CONFIGS: MetricConfig[] = [
 ];
 
 function aggregateMetrics(
-    filesAnalysis: any[],
+    filesAnalysis: FileAnalysis[],
     fileMetrics: Map<string, any>,
     config: MetricConfig
 ): RankedFile[] {
@@ -61,7 +61,7 @@ export async function analyzeRepository(repoPath: string): Promise<ProjectAnalys
     const filesAnalysis = computeRisk(fileMetrics);
 
     const centralityConfig = METRIC_CONFIGS.find(c => c.key === 'centrality')!;
-    const riskConfig = METRIC_CONFIGS.find(c => c.key === 'score')!;
+    const riskConfig = METRIC_CONFIGS.find(c => c.key === 'riskScore')!;
     const churnConfig = METRIC_CONFIGS.find(c => c.key === 'churn')!;
 
     const cycles: Cycle[] = dependencyGraph.detectCycles();

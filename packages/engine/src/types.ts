@@ -17,6 +17,7 @@ export interface FileMetadata {
 
 export interface ParseResult {
     files: ParsedFile[];
+    repositoryRoot: string;
 }
 
 export interface ParseOptions {
@@ -32,7 +33,8 @@ export enum SyntaxType {
     import_statement = "import_statement",
     export_statement = "export_statement",
     require_statement = "require_statement",
-    expression_statement = "expression_statement"
+    expression_statement = "expression_statement",
+    variable_declaration = "variable_declaration"
 }
 
 export interface ParsedSyntax {
@@ -50,6 +52,8 @@ export interface Cycle {
 export interface MetricContext {
     maxCommits: number;
     totalFiles: number;
+    repositoryRoot: string;
+    commitsPerFile: Map<string, number>;
 }
 
 export interface FileAnalysis {

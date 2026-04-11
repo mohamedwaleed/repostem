@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      openai:
-        specifier: ^4.77.3
-        version: 4.104.0
       tree-sitter:
         specifier: ^0.21.1
         version: 0.21.1
@@ -36,15 +33,21 @@ importers:
       '@types/lodash':
         specifier: ^4.17.24
         version: 4.17.24
+      commander:
+        specifier: ^14.0.3
+        version: 14.0.3
+      dotenv:
+        specifier: ^17.4.1
+        version: 17.4.1
       lodash:
         specifier: ^4.18.0
         version: 4.18.0
 
   packages/engine:
     dependencies:
-      dotenv:
-        specifier: ^17.4.1
-        version: 17.4.1
+      openai:
+        specifier: ^4.77.3
+        version: 4.104.0
       simple-git:
         specifier: ^3.35.2
         version: 3.35.2
@@ -300,6 +303,10 @@ packages:
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
+
+  commander@14.0.3:
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
+    engines: {node: '>=20'}
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
@@ -973,6 +980,8 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
+
+  commander@14.0.3: {}
 
   convert-source-map@2.0.0: {}
 

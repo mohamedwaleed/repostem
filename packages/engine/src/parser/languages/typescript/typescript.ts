@@ -6,6 +6,7 @@ import JavaScript from "tree-sitter-javascript";
 import { SyntaxProcessorFactory } from "../../syntax-processors/syntax-processor-factory";
 import { TsImportProcessor } from "./ts-import-processor";
 import { JavascriptImportProcessor } from "./javascript-import-processor";
+import { VariableDeclarationProcessor } from "./variable-declaration-processor";
 import path from "path";
 import { getExtensionsForLanguage } from "../../../utils/file-extensions";
 
@@ -19,6 +20,7 @@ export class TypeScriptParser implements ILanguageParser {
     this.processorFactory = new SyntaxProcessorFactory([
       new TsImportProcessor(),
       new JavascriptImportProcessor(),
+      new VariableDeclarationProcessor(),
     ]);
   }
   
@@ -42,6 +44,7 @@ export class TypeScriptParser implements ILanguageParser {
   private getImports(syntax: ParsedSyntax): ParsedImport[] {
     const tsImports = (syntax[SyntaxType.import_statement] as ParsedImport[]) || [];
     const jsRequires = (syntax[SyntaxType.expression_statement] as ParsedImport[]) || [];
-    return [...tsImports, ...jsRequires];
+    const varRequires = (syntax[SyntaxType.variable_declaration] as ParsedImport[]) || [];
+    return [...tsImports, ...jsRequires, ...varRequires];
   }
 }

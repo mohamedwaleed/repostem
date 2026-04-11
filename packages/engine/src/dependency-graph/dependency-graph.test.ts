@@ -6,9 +6,10 @@ describe('buildDependencyGraph', () => {
     
     it('should create an empty graph when given empty parse result', () => {
         const parseResult: ParseResult = {
-            files: []
+            files: [],
+            repositoryRoot: "/test/repo"
         };
-
+        
         const graph = buildDependencyGraph(parseResult);
 
         expect(graph.getNodes().size).toBe(0);
@@ -28,7 +29,8 @@ describe('buildDependencyGraph', () => {
                         extension: '.ts'
                     }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -57,7 +59,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 300, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -75,7 +78,10 @@ describe('buildDependencyGraph', () => {
                 {
                     path: 'src/index.ts',
                     syntax: {
-                        imports: ['src/utils.ts', 'src/config.ts']
+                        imports: [
+                            { source: './utils', resolvedPath: 'src/utils.ts', isExternal: false },
+                            { source: './config', resolvedPath: 'src/config.ts', isExternal: false }
+                        ]
                     },
                     metadata: { size: 100, extension: '.ts' }
                 },
@@ -89,7 +95,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 150, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -109,12 +116,12 @@ describe('buildDependencyGraph', () => {
             files: [
                 {
                     path: 'src/a.ts',
-                    syntax: { imports: ['src/b.ts'] },
+                    syntax: { imports: [{ source: './b', resolvedPath: 'src/b.ts', isExternal: false }] },
                     metadata: { size: 100, extension: '.ts' }
                 },
                 {
                     path: 'src/b.ts',
-                    syntax: { imports: ['src/c.ts'] },
+                    syntax: { imports: [{ source: './c', resolvedPath: 'src/c.ts', isExternal: false }] },
                     metadata: { size: 200, extension: '.ts' }
                 },
                 {
@@ -122,7 +129,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 300, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -142,15 +150,16 @@ describe('buildDependencyGraph', () => {
             files: [
                 {
                     path: 'src/a.ts',
-                    syntax: { imports: ['src/b.ts'] },
+                    syntax: { imports: [{ source: './b', resolvedPath: 'src/b.ts', isExternal: false }] },
                     metadata: { size: 100, extension: '.ts' }
                 },
                 {
                     path: 'src/b.ts',
-                    syntax: { imports: ['src/a.ts'] },
+                    syntax: { imports: [{ source: './a', resolvedPath: 'src/a.ts', isExternal: false }] },
                     metadata: { size: 200, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -170,20 +179,21 @@ describe('buildDependencyGraph', () => {
             files: [
                 {
                     path: 'src/a.ts',
-                    syntax: { imports: ['src/b.ts'] },
+                    syntax: { imports: [{ source: './b', resolvedPath: 'src/b.ts', isExternal: false }] },
                     metadata: { size: 100, extension: '.ts' }
                 },
                 {
                     path: 'src/b.ts',
-                    syntax: { imports: ['src/c.ts'] },
+                    syntax: { imports: [{ source: './c', resolvedPath: 'src/c.ts', isExternal: false }] },
                     metadata: { size: 200, extension: '.ts' }
                 },
                 {
                     path: 'src/c.ts',
-                    syntax: { imports: ['src/a.ts'] },
+                    syntax: { imports: [{ source: './a', resolvedPath: 'src/a.ts', isExternal: false }] },
                     metadata: { size: 300, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -202,7 +212,12 @@ describe('buildDependencyGraph', () => {
                 {
                     path: 'src/main.ts',
                     syntax: {
-                        imports: ['src/auth.ts', 'src/db.ts', 'src/logger.ts', 'src/config.ts']
+                        imports: [
+                            { source: './auth', resolvedPath: 'src/auth.ts', isExternal: false },
+                            { source: './db', resolvedPath: 'src/db.ts', isExternal: false },
+                            { source: './logger', resolvedPath: 'src/logger.ts', isExternal: false },
+                            { source: './config', resolvedPath: 'src/config.ts', isExternal: false }
+                        ]
                     },
                     metadata: { size: 500, extension: '.ts' }
                 },
@@ -226,7 +241,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 80, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -246,12 +262,12 @@ describe('buildDependencyGraph', () => {
             files: [
                 {
                     path: 'src/a.ts',
-                    syntax: { imports: ['src/shared.ts'] },
+                    syntax: { imports: [{ source: './shared', resolvedPath: 'src/shared.ts', isExternal: false }] },
                     metadata: { size: 100, extension: '.ts' }
                 },
                 {
                     path: 'src/b.ts',
-                    syntax: { imports: ['src/shared.ts'] },
+                    syntax: { imports: [{ source: './shared', resolvedPath: 'src/shared.ts', isExternal: false }] },
                     metadata: { size: 200, extension: '.ts' }
                 },
                 {
@@ -259,7 +275,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 300, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -282,7 +299,8 @@ describe('buildDependencyGraph', () => {
                         extension: '.ts'
                     }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -298,7 +316,11 @@ describe('buildDependencyGraph', () => {
                 {
                     path: 'src/index.ts',
                     syntax: {
-                        imports: ['src/utils.ts', 'src/utils.ts', 'src/utils.ts']
+                        imports: [
+                            { source: './utils', resolvedPath: 'src/utils.ts', isExternal: false },
+                            { source: './utils', resolvedPath: 'src/utils.ts', isExternal: false },
+                            { source: './utils', resolvedPath: 'src/utils.ts', isExternal: false }
+                        ]
                     },
                     metadata: { size: 100, extension: '.ts' }
                 },
@@ -307,7 +329,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 200, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -322,27 +345,39 @@ describe('buildDependencyGraph', () => {
             files: [
                 {
                     path: 'src/index.ts',
-                    syntax: { imports: ['src/router.ts', 'src/config.ts'] },
+                    syntax: { imports: [
+                            { source: './router', resolvedPath: 'src/router.ts', isExternal: false },
+                            { source: './config', resolvedPath: 'src/config.ts', isExternal: false }
+                        ] },
                     metadata: { size: 100, extension: '.ts' }
                 },
                 {
                     path: 'src/router.ts',
-                    syntax: { imports: ['src/controller.ts', 'src/middleware.ts'] },
+                    syntax: { imports: [
+                            { source: './controller', resolvedPath: 'src/controller.ts', isExternal: false },
+                            { source: './middleware', resolvedPath: 'src/middleware.ts', isExternal: false }
+                        ] },
                     metadata: { size: 200, extension: '.ts' }
                 },
                 {
                     path: 'src/controller.ts',
-                    syntax: { imports: ['src/service.ts', 'src/validator.ts'] },
+                    syntax: { imports: [
+                            { source: './service', resolvedPath: 'src/service.ts', isExternal: false },
+                            { source: './validator', resolvedPath: 'src/validator.ts', isExternal: false }
+                        ] },
                     metadata: { size: 300, extension: '.ts' }
                 },
                 {
                     path: 'src/service.ts',
-                    syntax: { imports: ['src/db.ts', 'src/logger.ts'] },
+                    syntax: { imports: [
+                            { source: './db', resolvedPath: 'src/db.ts', isExternal: false },
+                            { source: './logger', resolvedPath: 'src/logger.ts', isExternal: false }
+                        ] },
                     metadata: { size: 400, extension: '.ts' }
                 },
                 {
                     path: 'src/middleware.ts',
-                    syntax: { imports: ['src/logger.ts'] },
+                    syntax: { imports: [{ source: './logger', resolvedPath: 'src/logger.ts', isExternal: false }] },
                     metadata: { size: 150, extension: '.ts' }
                 },
                 {
@@ -352,12 +387,12 @@ describe('buildDependencyGraph', () => {
                 },
                 {
                     path: 'src/db.ts',
-                    syntax: { imports: ['src/config.ts'] },
+                    syntax: { imports: [{ source: './config', resolvedPath: 'src/config.ts', isExternal: false }] },
                     metadata: { size: 250, extension: '.ts' }
                 },
                 {
                     path: 'src/logger.ts',
-                    syntax: { imports: ['src/config.ts'] },
+                    syntax: { imports: [{ source: './config', resolvedPath: 'src/config.ts', isExternal: false }] },
                     metadata: { size: 120, extension: '.ts' }
                 },
                 {
@@ -365,7 +400,8 @@ describe('buildDependencyGraph', () => {
                     syntax: { imports: [] },
                     metadata: { size: 80, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);
@@ -389,10 +425,11 @@ describe('buildDependencyGraph', () => {
             files: [
                 {
                     path: 'src/recursive.ts',
-                    syntax: { imports: ['src/recursive.ts'] },
+                    syntax: { imports: [{ source: './recursive', resolvedPath: 'src/recursive.ts', isExternal: false }] },
                     metadata: { size: 100, extension: '.ts' }
                 }
-            ]
+            ],
+            repositoryRoot: "/test/repo"
         };
 
         const graph = buildDependencyGraph(parseResult);

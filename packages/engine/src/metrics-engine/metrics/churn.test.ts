@@ -12,7 +12,8 @@ const createMockGraph = (): IGraph => ({
     getOutDegree: () => 0,
     detectCycles: () => [],
     getNodes: () => new Map(),
-    getEdges: () => new Map()
+    getEdges: () => new Map(),
+    getRepositoryRoot: () => "/test/repo"
 });
 
 describe('ChurnMetric', () => {
@@ -30,12 +31,8 @@ describe('ChurnMetric', () => {
     describe('compute', () => {
         it('should return 0 when maxCommits is 0', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 0 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 0 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 0]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 0, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -43,12 +40,8 @@ describe('ChurnMetric', () => {
 
         it('should return 0 when file has no commits', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 0 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 0]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -56,12 +49,8 @@ describe('ChurnMetric', () => {
 
         it('should calculate churn correctly for file with commits', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 5 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 5]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0.5);
@@ -69,12 +58,8 @@ describe('ChurnMetric', () => {
 
         it('should return 1.0 when file has maxCommits', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 20 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 20 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 20]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 20, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1.0);
@@ -82,12 +67,8 @@ describe('ChurnMetric', () => {
 
         it('should handle git errors gracefully and return 0', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockRejectedValue(new Error('Git error'))
-            } as any);
+            const commitsPerFile = new Map(); // File not in map
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -95,12 +76,8 @@ describe('ChurnMetric', () => {
 
         it('should calculate churn for low activity file', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 100 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 2 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 2]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 100, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0.02);
@@ -108,12 +85,8 @@ describe('ChurnMetric', () => {
 
         it('should calculate churn for high activity file', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 50 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 45 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 45]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 50, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0.9);
@@ -121,12 +94,8 @@ describe('ChurnMetric', () => {
 
         it('should handle single commit', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 1 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 1]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0.1);
@@ -134,12 +103,8 @@ describe('ChurnMetric', () => {
 
         it('should normalize correctly with varying maxCommits', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 1 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 1 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 1]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 1, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1.0);
@@ -147,12 +112,8 @@ describe('ChurnMetric', () => {
 
         it('should handle very large commit counts', async () => {
             const graph = createMockGraph();
-            const context: MetricContext = { totalFiles: 5, maxCommits: 1000 };
-
-            const simpleGit = await import('simple-git');
-            vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 750 })
-            } as any);
+            const commitsPerFile = new Map([['file.ts', 750]]);
+            const context: MetricContext = { totalFiles: 5, maxCommits: 1000, repositoryRoot: "/test/repo", commitsPerFile };
 
             const result = await metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0.75);

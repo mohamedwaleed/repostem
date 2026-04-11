@@ -23,7 +23,8 @@ function parseFile(filePath: string, parseOptions: ParseOptions, repositoryRoot:
 function parseRepositoryFiles(repositoryPath: string, parseOptions: ParseOptions) {
     const stack: string[] = [repositoryPath];
     const parseResult: ParseResult = {
-        files: []
+        files: [],
+        repositoryRoot: repositoryPath
     };
     while (stack.length > 0) {
         const currentPath = stack.pop()!;
