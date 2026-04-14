@@ -5,6 +5,7 @@ import {
     analyzeFileRisk,
     computeFileImpact,
     detectRepositoryCycles,
+    ask,
     explainFileRisk
 } from './engine';
 import { ProjectAnalysisResult, FileRiskResult, FileImpactResult, Cycle } from './types';

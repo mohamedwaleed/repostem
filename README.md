@@ -25,6 +25,37 @@ Not yet implemented:
 - Contributor modeling
 - Multi-language support
 
+# Configuration
+
+RepoStem can be configured using a `.repostem.json` or `repostem.config.json` file in your repository root.
+
+## Ignore Patterns
+
+Control which files and directories are excluded from analysis:
+
+```json
+{
+  "ignore": [
+    "legacy/**",
+    "scripts/**",
+    "**/*.generated.ts"
+  ],
+  "respectGitignore": true
+}
+```
+
+### Default Ignore Patterns
+
+RepoStem automatically ignores common directories:
+- `node_modules/`, `.git/`, `dist/`, `build/`, `coverage/`
+- Test files: `**/*.test.ts`, `**/*.spec.js`
+- Build artifacts: `**/*.min.js`, `**/*.bundle.js`
+- Framework outputs: `.next/`, `.nuxt/`, `out/`
+
+### `.gitignore` Integration
+
+By default (`respectGitignore: true`), RepoStem respects your `.gitignore` patterns. Set to `false` to analyze gitignored files.
+
 # Roadmap
 - Stage 1: Structural intelligence ✅
 - Stage 2: Temporal evolution tracking

@@ -24,7 +24,8 @@ const createMockGraph = (
     getOutDegree: (node: string) => outDegrees.get(node) || 0,
     detectCycles: () => cycles,
     getNodes: () => nodes,
-    getEdges: () => new Map()
+    getEdges: () => new Map(),
+    getRepositoryRoot: () => "/test/repo"
 });
 
 describe('MetricsComputer', () => {
@@ -130,20 +131,15 @@ describe('MetricsComputer', () => {
             ]);
 
             const simpleGit = await import('simple-git');
-            let callCount = 0;
             vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockImplementation(() => {
-                    callCount++;
-                    return Promise.resolve({ total: callCount === 1 ? 5 : 10 });
-                })
+                raw: vi.fn().mockResolvedValue('COMMIT:abc123\nfile1.ts\n\nCOMMIT:def456\nfile2.ts\nfile2.ts\n')
             } as any);
 
             const graph = createMockGraph(nodes, new Map(), new Map());
             const result = await computer.computeMetrics(graph);
 
             expect(result).toBeInstanceOf(Map);
-            // git.log is called twice per file (once in calculateMaxCommits, once in ChurnMetric.compute)
-            expect(callCount).toBe(4);
+            expect(result.size).toBe(2);
         });
 
         it('should handle git errors gracefully and return 0', async () => {
@@ -151,7 +147,7 @@ describe('MetricsComputer', () => {
 
             const simpleGit = await import('simple-git');
             vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockRejectedValue(new Error('Git error'))
+                raw: vi.fn().mockRejectedValue(new Error('Git error'))
             } as any);
 
             const graph = createMockGraph(nodes, new Map(), new Map());
@@ -167,7 +163,7 @@ describe('MetricsComputer', () => {
 
             const simpleGit = await import('simple-git');
             vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 0 })
+                raw: vi.fn().mockResolvedValue('')
             } as any);
 
             const graph = createMockGraph(nodes, new Map(), new Map());
@@ -313,8 +309,10 @@ describe('MetricsComputer', () => {
             const nodes = new Map([['file.ts', createMockFile('file.ts')]]);
 
             const simpleGit = await import('simple-git');
+            // Mock 10 commits for file.ts
+            const gitOutput = Array.from({length: 10}, (_, i) => `COMMIT:commit${i}\nfile.ts\n`).join('\n');
             vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockResolvedValue({ total: 10 })
+                raw: vi.fn().mockResolvedValue(gitOutput)
             } as any);
 
             const graph = createMockGraph(nodes, new Map(), new Map());
@@ -441,12 +439,13 @@ describe('MetricsComputer', () => {
             ]);
 
             const simpleGit = await import('simple-git');
+            // Mock 20 commits for high-churn.ts and 5 for low-churn.ts
+            const highChurnCommits = Array.from({length: 20}, (_, i) => `COMMIT:high${i}\nhigh-churn.ts\n`).join('\n');
+            const lowChurnCommits = Array.from({length: 5}, (_, i) => `COMMIT:low${i}\nlow-churn.ts\n`).join('\n');
+            const gitOutput = highChurnCommits + '\n' + lowChurnCommits;
+            
             vi.mocked(simpleGit.default).mockReturnValue({
-                log: vi.fn().mockImplementation(({ file }) => {
-                    // Return 20 for high-churn.ts, 5 for low-churn.ts
-                    const commits = file === 'high-churn.ts' ? 20 : 5;
-                    return Promise.resolve({ total: commits });
-                })
+                raw: vi.fn().mockResolvedValue(gitOutput)
             } as any);
 
             const graph = createMockGraph(nodes, new Map(), new Map());

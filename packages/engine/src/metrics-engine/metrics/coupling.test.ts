@@ -13,7 +13,9 @@ const createMockGraph = (
     getOutDegree: (node: string) => outDegrees.get(node) || 0,
     detectCycles: () => [],
     getNodes: () => new Map(),
-    getEdges: () => new Map()
+    getEdges: () => new Map(),
+            getRepositoryRoot: () => "/test/repo",
+            getRepositoryRoot: () => "/test/repo"
 });
 
 describe('CouplingMetric', () => {
@@ -33,7 +35,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 0]]),
                 new Map([['file.ts', 0]])
             );
-            const context: MetricContext = { totalFiles: 1, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 1, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -44,7 +46,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 0]]),
                 new Map([['file.ts', 0]])
             );
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -55,7 +57,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 2]]),
                 new Map([['file.ts', 0]])
             );
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(2 / 8);
@@ -66,7 +68,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 0]]),
                 new Map([['file.ts', 3]])
             );
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(3 / 8);
@@ -77,7 +79,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 2]]),
                 new Map([['file.ts', 3]])
             );
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(5 / 8);
@@ -88,7 +90,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 9]]),
                 new Map([['file.ts', 9]])
             );
-            const context: MetricContext = { totalFiles: 10, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 10, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1.0);
@@ -99,7 +101,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 7]]),
                 new Map([['file.ts', 2]])
             );
-            const context: MetricContext = { totalFiles: 10, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 10, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(9 / 18);
@@ -110,7 +112,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 1]]),
                 new Map([['file.ts', 8]])
             );
-            const context: MetricContext = { totalFiles: 10, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 10, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(9 / 18);
@@ -121,7 +123,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 25]]),
                 new Map([['file.ts', 30]])
             );
-            const context: MetricContext = { totalFiles: 100, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 100, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBeCloseTo(55 / 198);
@@ -132,7 +134,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 5]]),
                 new Map([['file.ts', 5]])
             );
-            const context: MetricContext = { totalFiles: 0, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 0, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -143,7 +145,7 @@ describe('CouplingMetric', () => {
                 new Map([['file.ts', 4]]),
                 new Map([['file.ts', 4]])
             );
-            const context: MetricContext = { totalFiles: 10, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 10, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBeCloseTo(8 / 18);

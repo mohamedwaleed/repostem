@@ -10,7 +10,9 @@ const createMockGraph = (cycles: Cycle[] = []): IGraph => ({
     getOutDegree: () => 0,
     detectCycles: () => cycles,
     getNodes: () => new Map(),
-    getEdges: () => new Map()
+    getEdges: () => new Map(),
+            getRepositoryRoot: () => "/test/repo",
+            getRepositoryRoot: () => "/test/repo"
 });
 
 describe('CircularDependencyMetric', () => {
@@ -27,7 +29,7 @@ describe('CircularDependencyMetric', () => {
     describe('compute', () => {
         it('should return 0 when no cycles exist in graph', () => {
             const graph = createMockGraph([]);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -38,7 +40,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['a.ts', 'b.ts', 'c.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -49,7 +51,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['file.ts', 'b.ts', 'c.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1);
@@ -61,7 +63,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['file.ts', 'c.ts', 'd.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1);
@@ -72,7 +74,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['file.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1);
@@ -83,7 +85,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['file.ts', 'other.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1);
@@ -94,7 +96,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['file.ts', 'a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts', 'f.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 10, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 10, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1);
@@ -107,7 +109,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['x.ts', 'y.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 10, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 10, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -115,7 +117,7 @@ describe('CircularDependencyMetric', () => {
 
         it('should handle empty cycles array', () => {
             const graph = createMockGraph([]);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -126,7 +128,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['File.ts', 'b.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(0);
@@ -137,7 +139,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['src/file.ts', 'b.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'src/file.ts', context);
             expect(result).toBe(1);
@@ -148,7 +150,7 @@ describe('CircularDependencyMetric', () => {
                 { nodes: ['a.ts', 'file.ts', 'b.ts'] }
             ];
             const graph = createMockGraph(cycles);
-            const context: MetricContext = { totalFiles: 5, maxCommits: 10 };
+            const context: MetricContext = { totalFiles: 5, maxCommits: 10, repositoryRoot: "/test/repo", commitsPerFile: new Map() };
 
             const result = metric.compute(graph, 'file.ts', context);
             expect(result).toBe(1);

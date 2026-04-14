@@ -20,38 +20,78 @@ export class MetricsComputer {
         this.metrics.push(metric);
     }
 
-    private async calculateMaxCommits(nodes: string[]): Promise<number> {
+    private async calculateCommitsPerFile(repositoryRoot: string): Promise<Map<string, number>> {
         try {
-            const git = simpleGit();
+            const git = simpleGit(repositoryRoot);
             const sixMonthsAgo = new Date();
             sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
             
-            let maxCommits = 0;
+            // Use git log with --name-only to get all commits and their changed files in one call
+            const logOutput = await git.raw([
+                'log',
+                '--since=' + sixMonthsAgo.toISOString(),
+                '--name-only',
+                '--pretty=format:COMMIT:%H'
+            ]);
             
-            for (const nodePath of nodes) {
-                const commitCount = await git.log({ 
-                    file: nodePath,
-                    from: sixMonthsAgo.toISOString()
-                }).then(log => log.total)
-                .catch(() => 0);
-                
-                maxCommits = Math.max(maxCommits, commitCount);
+            // Parse the output to count commits per file
+            const commitsPerFile = new Map<string, Set<string>>();
+            const lines = logOutput.split('\n');
+            let currentCommit = '';
+            
+            for (const line of lines) {
+                if (line.startsWith('COMMIT:')) {
+                    currentCommit = line.substring(7);
+                } else if (line.trim() && currentCommit) {
+                    // This is a file path
+                    const filePath = line.trim();
+                    if (!commitsPerFile.has(filePath)) {
+                        commitsPerFile.set(filePath, new Set());
+                    }
+                    commitsPerFile.get(filePath)!.add(currentCommit);
+                }
             }
             
-            return maxCommits;
+            // Convert Set sizes to counts
+            const commitCounts = new Map<string, number>();
+            for (const [file, commits] of commitsPerFile.entries()) {
+                commitCounts.set(file, commits.size);
+            }
+            
+            return commitCounts;
         } catch (error) {
-            return 0;
+            console.error('Error calculating commits per file:', error);
+            return new Map();
         }
     }
     
     async computeMetrics(dependencyGraph: IGraph) {
         const nodes = Array.from(dependencyGraph.getNodes().keys());
+        const repositoryRoot = dependencyGraph.getRepositoryRoot();
         
-        // Pre-compute context once
-        const maxCommits = await this.calculateMaxCommits(nodes);
+        // Pre-compute all commits in a single git operation
+        const allCommitsPerFile = await this.calculateCommitsPerFile(repositoryRoot);
+        
+        // Filter to only include files that were parsed (JS/TS files)
+        const nodesSet = new Set(nodes);
+        const commitsPerFile = new Map<string, number>();
+        for (const [file, count] of allCommitsPerFile.entries()) {
+            if (nodesSet.has(file)) {
+                commitsPerFile.set(file, count);
+            }
+        }
+        
+        // Calculate maxCommits from the filtered data
+        let maxCommits = 0;
+        for (const count of commitsPerFile.values()) {
+            maxCommits = Math.max(maxCommits, count);
+        }
+        
         const context: MetricContext = {
             maxCommits,
-            totalFiles: nodes.length
+            totalFiles: nodes.length,
+            repositoryRoot,
+            commitsPerFile
         };
         
         const fileMetrics: Map<string, Record<string, number>> = new Map();
@@ -70,10 +110,31 @@ export class MetricsComputer {
 
     async computeFileMetrics(dependencyGraph: IGraph, filePath: string) {
         const nodes = Array.from(dependencyGraph.getNodes().keys());
-        const maxCommits = await this.calculateMaxCommits(nodes);
+        const repositoryRoot = dependencyGraph.getRepositoryRoot();
+        
+        // Pre-compute all commits in a single git operation
+        const allCommitsPerFile = await this.calculateCommitsPerFile(repositoryRoot);
+        
+        // Filter to only include files that were parsed (JS/TS files)
+        const nodesSet = new Set(nodes);
+        const commitsPerFile = new Map<string, number>();
+        for (const [file, count] of allCommitsPerFile.entries()) {
+            if (nodesSet.has(file)) {
+                commitsPerFile.set(file, count);
+            }
+        }
+        
+        // Calculate maxCommits from the filtered data
+        let maxCommits = 0;
+        for (const count of commitsPerFile.values()) {
+            maxCommits = Math.max(maxCommits, count);
+        }
+        
         const context: MetricContext = {
             maxCommits,
-            totalFiles: nodes.length
+            totalFiles: nodes.length,
+            repositoryRoot,
+            commitsPerFile
         };
         
         const metricsForFile: Record<string, number> = {};
@@ -81,6 +142,7 @@ export class MetricsComputer {
             const result = metric.compute(dependencyGraph, filePath, context);
             metricsForFile[metric.key] = result instanceof Promise ? await result : result;
         }
+        
         return metricsForFile;
     }
 }

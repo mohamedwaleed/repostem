@@ -10,5 +10,6 @@ export default interface IGraph {
 
     getNodes(): Map<string, ParsedFile>;
     getEdges(): Map<string, Set<string>>;
+    getRepositoryRoot(): string;
     
 }

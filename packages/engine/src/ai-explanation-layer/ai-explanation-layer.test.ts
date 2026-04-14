@@ -110,10 +110,10 @@ describe('AI Explanation Layer', () => {
             await explainFileRiskUsingAI(fileAnalysis);
 
             const promptArg = mockCall.mock.calls[0][2];
-            expect(promptArg).toContain('centrality: 0.7');
-            expect(promptArg).toContain('coupling: 0.5');
-            expect(promptArg).toContain('churn: 0.4');
-            expect(promptArg).toContain('circularDependency: 1');
+            expect(promptArg).toContain('Dependency Importance: 0.7');
+            expect(promptArg).toContain('Connectivity: 0.5');
+            expect(promptArg).toContain('Change Frequency: 0.4');
+            expect(promptArg).toContain('Cyclic Dependency: 1');
             expect(promptArg).toContain('Risk Score: 0.65');
         });
 
@@ -175,9 +175,9 @@ describe('AI Explanation Layer', () => {
             await explainFileRiskUsingAI(fileAnalysis);
 
             const promptArg = mockCall.mock.calls[0][2];
-            expect(promptArg).toContain('centrality: 0.987654');
-            expect(promptArg).toContain('coupling: 0.555555');
-            expect(promptArg).toContain('churn: 0.111111');
+            expect(promptArg).toContain('Dependency Importance: 0.987654');
+            expect(promptArg).toContain('Connectivity: 0.555555');
+            expect(promptArg).toContain('Change Frequency: 0.111111');
             expect(promptArg).toContain('Risk Score: 0.123456');
         });
 
@@ -194,7 +194,7 @@ describe('AI Explanation Layer', () => {
 
             const systemPromptArg = mockCall.mock.calls[0][1];
             expect(systemPromptArg).toContain('software architecture analysis assistant');
-            expect(systemPromptArg).toContain('structural risk');
+            expect(systemPromptArg).toContain('structural signals');
             expect(systemPromptArg).toContain('Do not invent facts');
         });
 
@@ -270,9 +270,9 @@ describe('AI Explanation Layer', () => {
 
             const promptArg = mockCall.mock.calls[0][2];
             expect(promptArg).toContain('Explain:');
-            expect(promptArg).toContain('What these metrics imply structurally');
-            expect(promptArg).toContain('Why the file may be considered low/moderate/high risk');
-            expect(promptArg).toContain('architectural concerns');
+            expect(promptArg).toContain('What each metric implies structurally');
+            expect(promptArg).toContain('Why the provided Risk Level is appropriate');
+            expect(promptArg).toContain('structural concerns');
         });
 
         it('should format metrics as key-value pairs with dashes', async () => {
@@ -291,9 +291,9 @@ describe('AI Explanation Layer', () => {
             await explainFileRiskUsingAI(fileAnalysis);
 
             const promptArg = mockCall.mock.calls[0][2];
-            expect(promptArg).toContain('- metric1: 0.1');
-            expect(promptArg).toContain('- metric2: 0.2');
-            expect(promptArg).toContain('- metric3: 0.3');
+            expect(promptArg).toContain('- metric1: 0.1 (low)');
+            expect(promptArg).toContain('- metric2: 0.2 (low)');
+            expect(promptArg).toContain('- metric3: 0.3 (medium)');
         });
     });
 
