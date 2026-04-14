@@ -14,6 +14,7 @@
   "dependencies": {
     "@repostem/engine": "workspace:*",
     "@types/lodash": "^4.17.24",
+    "chalk": "^5.6.2",
     "commander": "^14.0.3",
     "dotenv": "^17.4.1",
     "lodash": "^4.18.0"

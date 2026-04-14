@@ -10,6 +10,9 @@
     "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
+    "@types/lodash": "^4.17.24",
+    "lodash": "^4.18.0",
+    "minimatch": "^10.2.5",
     "openai": "^4.77.3",
     "simple-git": "^3.35.2",
     "ts-node": "^10.9.2"

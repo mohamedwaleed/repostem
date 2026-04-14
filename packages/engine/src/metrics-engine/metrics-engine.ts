@@ -1,6 +1,7 @@
 
 import IGraph from "../dependency-graph/graph-implementations/graph-interface";
 import { MetricsComputer } from "./metrics-computer";
+import { MetricClassification } from "../types";
 
 export async function computeMetrics(dependencyGraph: IGraph) {
     const metricsComputer = new MetricsComputer();
@@ -12,4 +13,5 @@ export async function computeFileMetrics(dependencyGraph: IGraph, filePath: stri
     const metricsComputer = new MetricsComputer();
     const fileMetrics = await metricsComputer.computeFileMetrics(dependencyGraph, filePath);
     return fileMetrics;
+
 }

@@ -6,7 +6,7 @@ export class OpenAIService implements AIProvider {
     
     async call(model: string, systemPrompt: string, prompt: string): Promise<string> {
         if (!process.env.OPENAI_API_KEY) {
-            throw new Error("OPENAI_API_KEY is not set");
+            throw new Error("OPENAI_API_KEY is not set, please set it in your environment variables by running: export OPENAI_API_KEY=your_key");
         }
         const client = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,

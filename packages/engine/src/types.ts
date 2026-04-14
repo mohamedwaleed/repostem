@@ -90,8 +90,20 @@ export interface FileImpactResult {
   directDependents: string[];
   transitiveDependents: string[];
   totalImpactCount: number;
+  impactRatio: number;
 }
 
 export enum AIProvider {
     OPENAI = "openai"
+}
+
+export enum MetricClassification {
+    LOW = "low",
+    MEDIUM = "medium",
+    HIGH = "high"
+}
+
+export interface RepoStemConfig {
+  ignore?: string[];
+  respectGitignore?: boolean;
 }

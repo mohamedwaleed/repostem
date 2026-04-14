@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "packages/*/dist/**",
+    "apps/*/dist/**", 
+    "packages/*/node_modules/**",
+    "apps/*/node_modules/**",
+    "examples/**"
+  ],
+  "respectGitignore": false
+}

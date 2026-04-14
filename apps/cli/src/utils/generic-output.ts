@@ -1,3 +1,6 @@
+import { classify, getMetricLabel, MetricClassification } from "@repostem/engine";
+import chalk from 'chalk';
+
 export enum OutputFormat {
   TEXT = "text",
   JSON = "json", 
@@ -15,49 +18,96 @@ export class JsonOutputFormatter implements GenericOutputFormatter {
   }
 }
 
+// Color helper functions
+const getRiskColor = (score: number) => {
+  const level = classify(score);
+  switch (level) {
+    case MetricClassification.HIGH: return chalk.red.bold;
+    case MetricClassification.MEDIUM: return chalk.yellow.bold;
+    case MetricClassification.LOW: return chalk.green.bold;
+    default: return chalk.gray;
+  }
+};
+
+const getCentralityColor = (score: number) => {
+  const level = classify(score);
+  switch (level) {
+    case MetricClassification.HIGH: return chalk.magenta.bold;
+    case MetricClassification.MEDIUM: return chalk.blue.bold;
+    case MetricClassification.LOW: return chalk.cyan.bold;
+    default: return chalk.gray;
+  }
+};
+
+const getChurnColor = (score: number) => {
+  const level = classify(score);
+  switch (level) {
+    case MetricClassification.HIGH: return chalk.hex('#FFA500').bold; // Orange
+    case MetricClassification.MEDIUM: return chalk.yellow.bold;
+    case MetricClassification.LOW: return chalk.green.bold;
+    default: return chalk.gray;
+  }
+};
+
 export class AnalysisTextFormatter implements GenericOutputFormatter {
   format(data: any, context?: any): string {
     const sections: string[] = [];
 
-    sections.push("RepoStem Structural Analysis");
+    // RepoStem Banner
+    sections.push('');
+    sections.push(chalk.bold.cyan(' ____  _____ ____   ___  ____ _____ _____ __  __ '));
+    sections.push(chalk.bold.cyan('|  _ \\| ____|  _ \\ / _ \\/ ___|_   _| ____|  \\/  |'));
+    sections.push(chalk.bold.cyan('| |_) |  _| | |_) | | | \\___ \\ | | |  _| | |\\/| |'));
+    sections.push(chalk.bold.cyan('|  _ <| |___|  __/| |_| |___) || | | |___| |  | |'));
+    sections.push(chalk.bold.cyan('|_| \\_\\_____|_|    \\___/|____/ |_| |_____|_|  |_|'));
+    sections.push('');
+    sections.push(chalk.gray('  Structural Risk Analysis Tool'));
+    sections.push('');
+    sections.push(chalk.bold.cyan('RepoStem Structural Analysis'));
     sections.push("");
-    sections.push(`Files analyzed: ${data.totalFiles || 0}`);
-    sections.push(`Internal dependencies: ${data.totalDependencies || 0}`);
-    sections.push(`Circular dependency groups: ${data.cycleCount || 0}`);
+    sections.push(chalk.gray(`Files analyzed: ${data.totalFiles || 0}`));
+    sections.push(chalk.gray(`Internal dependencies: ${data.totalDependencies || 0}`));
+    sections.push(chalk.gray(`Circular dependency groups: ${data.cycleCount || 0}`));
     sections.push("");
 
     if (data.topCentralFiles?.length > 0) {
-      sections.push("Top 5 Most Central Files:");
+      sections.push(chalk.bold.magenta("Top 5 Most Central Files:"));
       data.topCentralFiles.forEach((item: any, index: number) => {
         const score = (item.score || 0).toFixed(2);
-        sections.push(`${index + 1}. ${item.file} (centrality: ${score})`);
+        const classification = classify(item.score || 0);
+        const coloredScore = getCentralityColor(item.score || 0)(`${score} - ${classification.toLowerCase()}`);
+        sections.push(`${chalk.gray(index + 1)}. ${chalk.white(item.file)} (${chalk.cyan(getMetricLabel('centrality').toLowerCase())}: ${coloredScore})`);
       });
       sections.push("");
     }
 
     if (data.topRiskFiles?.length > 0) {
-      sections.push("Top 5 Highest Risk Files:");
+      sections.push(chalk.bold.red("Top 5 Highest Risk Files:"));
       data.topRiskFiles.forEach((item: any, index: number) => {
         const score = (item.score || 0).toFixed(2);
-        sections.push(`${index + 1}. ${item.file} (risk: ${score})`);
+        const classification = classify(item.score || 0);
+        const coloredScore = getRiskColor(item.score || 0)(`${score} - ${classification.toLowerCase()}`);
+        sections.push(`${chalk.gray(index + 1)}. ${chalk.white(item.file)} (${chalk.red(getMetricLabel('riskScore').toLowerCase())}: ${coloredScore})`);
       });
       sections.push("");
     }
 
     if (data.highChurnFiles?.length > 0) {
-      sections.push("High Churn Files (Last 6 months):");
+      sections.push(chalk.bold.hex('#FFA500')("High Churn Files (Last 6 months):"));
       data.highChurnFiles.forEach((item: any) => {
         const churnScore = item.score || 0;
         const commitEstimate = Math.round(churnScore * 100);
-        sections.push(`- ${item.file} (~${commitEstimate} commits)`);
+        const classification = classify(churnScore);
+        const coloredChurn = getChurnColor(churnScore)(`${classification.toLowerCase()} churn`);
+        sections.push(`${chalk.gray('-')} ${chalk.white(item.file)} (${chalk.hex('#FFA500')(`~${commitEstimate} commits`)} - ${coloredChurn})`);
       });
       sections.push("");
     }
 
     if (data.architectureSignals && data.architectureSignals.length > 0) {
-      sections.push("Architecture Signals:");
+      sections.push(chalk.bold.yellow("Architecture Signals:"));
       data.architectureSignals.forEach((signal: string) => {
-        sections.push(`- ${signal}`);
+        sections.push(`${chalk.gray('-')} ${chalk.yellow(signal)}`);
       });
     }
 
@@ -77,8 +127,13 @@ export class TextOutputFormatter implements GenericOutputFormatter {
       return 'null';
     }
     
-    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    if (typeof value === 'string' || typeof value === 'boolean') {
       return String(value);
+    }
+    
+    if (typeof value === 'number') {
+      const classification = classify(value);
+      return `${value} (${classification})`;
     }
     
     if (Array.isArray(value)) {
@@ -92,11 +147,12 @@ export class TextOutputFormatter implements GenericOutputFormatter {
       
       return entries
         .map(([key, val]) => {
+          const label = getMetricLabel(key);
           const formattedVal = this.formatValue(val, indent + 1);
           if (typeof val === 'object' && val !== null) {
-            return `${spaces}${key}:\n${formattedVal}`;
+            return `${spaces}${label}:\n${formattedVal}`;
           }
-          return `${spaces}${key}: ${formattedVal}`;
+          return `${spaces}${label}: ${formattedVal}`;
         })
         .join('\n');
     }
@@ -132,7 +188,7 @@ export class TableOutputFormatter implements GenericOutputFormatter {
     ));
 
     // Build table rows
-    const headers = allKeys;
+    const headers = allKeys.map(key => getMetricLabel(key));
     const rows = data.map(item => 
       allKeys.map(key => this.formatCell(item?.[key]))
     );
@@ -140,13 +196,14 @@ export class TableOutputFormatter implements GenericOutputFormatter {
     return this.createTable([headers, ...rows]);
   }
 
-  private objectToKeyValuePairs(obj: any): [string, string][] {
+  private objectToKeyValuePairs(obj: any): [string, any][] {
     if (obj === null || obj === undefined) return [];
     
-    const pairs: [string, string][] = [];
+    const pairs: [string, any][] = [];
     
     const processValue = (key: string, value: any, prefix = ''): void => {
-      const fullKey = prefix ? `${prefix}.${key}` : key;
+      const label = getMetricLabel(key);
+      const fullKey = prefix ? `${prefix}.${label}` : label;
       
       if (value === null || value === undefined) {
         pairs.push([fullKey, 'null']);
@@ -156,7 +213,7 @@ export class TableOutputFormatter implements GenericOutputFormatter {
       } else if (Array.isArray(value)) {
         pairs.push([fullKey, this.formatArray(value)]);
       } else {
-        pairs.push([fullKey, String(value)]);
+        pairs.push([fullKey, value]);
       }
     };
 
@@ -164,11 +221,11 @@ export class TableOutputFormatter implements GenericOutputFormatter {
     return pairs;
   }
 
-  private formatKeyValueTable(pairs: [string, string][], context?: any): string {
+  private formatKeyValueTable(pairs: [string, any][], context?: any): string {
     if (pairs.length === 0) return 'No data to display';
 
     const headers = context?.headers || ['Property', 'Value'];
-    const rows = pairs.map(([key, value]) => [key, value]);
+    const rows = pairs.map(([key, value]) => [key, this.formatCell(value)]);
 
     return this.createTable([headers, ...rows]);
   }
@@ -193,7 +250,11 @@ export class TableOutputFormatter implements GenericOutputFormatter {
   private formatCell(value: any): string {
     if (value === null || value === undefined) return 'null';
     if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    if (typeof value === 'number') return Number.isInteger(value) ? value.toString() : value.toFixed(3);
+    if (typeof value === 'number') {
+      const formatted = Number.isInteger(value) ? value.toString() : value.toFixed(3);
+      const classification = classify(value);
+      return `${formatted} (${classification})`;
+    }
     if (typeof value === 'object') return JSON.stringify(value);
     return String(value);
   }
