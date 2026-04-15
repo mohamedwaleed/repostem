@@ -1,12 +1,13 @@
 {
   "name": "repostem",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "AI-powered architecture and structural risk analysis for repositories",
-  "private": true,
+  "private": false,
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",
     "clean": "pnpm -r exec rm -rf dist node_modules",
+    "test:cli": "pnpm --filter @repostem/cli test",
     "test:engine": "pnpm --filter @repostem/engine test",
     "test:engine:watch": "pnpm --filter @repostem/engine test:watch"
   },
@@ -22,10 +23,5 @@
   "devDependencies": {
     "@types/node": "^22.10.5",
     "typescript": "^5.7.2"
-  },
-  "dependencies": {
-    "tree-sitter": "^0.21.1",
-    "tree-sitter-javascript": "^0.23.0",
-    "tree-sitter-typescript": "^0.23.2"
   }
 }
