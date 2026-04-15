@@ -7,16 +7,6 @@ settings:
 importers:
 
   .:
-    dependencies:
-      tree-sitter:
-        specifier: ^0.21.1
-        version: 0.21.1
-      tree-sitter-javascript:
-        specifier: ^0.23.0
-        version: 0.23.1(tree-sitter@0.21.1)
-      tree-sitter-typescript:
-        specifier: ^0.23.2
-        version: 0.23.2(tree-sitter@0.21.1)
     devDependencies:
       '@types/node':
         specifier: ^22.10.5
@@ -63,6 +53,15 @@ importers:
       simple-git:
         specifier: ^3.35.2
         version: 3.35.2
+      tree-sitter:
+        specifier: ^0.21.1
+        version: 0.21.1
+      tree-sitter-javascript:
+        specifier: ^0.23.0
+        version: 0.23.1(tree-sitter@0.21.1)
+      tree-sitter-typescript:
+        specifier: ^0.23.2
+        version: 0.23.2(tree-sitter@0.21.1)
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@22.19.15)(typescript@5.9.3)
