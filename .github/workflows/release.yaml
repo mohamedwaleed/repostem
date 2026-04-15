@@ -76,7 +76,7 @@ jobs:
             
             ### Installation
             ```bash
-            npm install -g @repostem/cli
+            pnpm install -g @repostem/cli
             ```
             
             ### Quick Start
@@ -87,4 +87,5 @@ jobs:
       - name: Publish CLI to npm
         run: |
           cd apps/cli
-          npm publish --access public
+          pnpm build
+          pnpm publish --access public --no-git-checks
