@@ -52,8 +52,13 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git tag v${{ steps.version.outputs.version }}
-          git push origin v${{ steps.version.outputs.version }}
+          # Check if tag already exists
+          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "Tag v${{ steps.version.outputs.version }} already exists, skipping tag creation"
+          else
+            git tag v${{ steps.version.outputs.version }}
+            git push origin v${{ steps.version.outputs.version }}
+          fi
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
