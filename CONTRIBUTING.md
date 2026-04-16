@@ -108,7 +108,48 @@ Thank you for your interest in contributing to RepoStem! This guide will help yo
 
 ### Release Process
 
-Releases are handled manually by the maintainer through GitHub Actions. Only the main maintainer can trigger releases.
+Releases are managed using **Changesets** for version management and changelog generation.
+
+#### For Contributors
+
+If your change affects the public API or includes user-facing changes:
+
+1. **Add a changeset** after making your changes:
+   ```bash
+   pnpm changeset
+   ```
+   
+2. **Choose the appropriate version type**:
+   - `patch`: Bug fixes, documentation updates
+   - `minor`: New features, non-breaking changes
+   - `major`: Breaking changes
+
+3. **Write a clear description** of what changed and why
+
+#### For Maintainers
+
+To create a new release:
+
+1. **Ensure all changesets are added** for PRs that need version bumps
+2. **Update versions and changelog**:
+   ```bash
+   pnpm changeset version
+   ```
+   
+3. **Commit the version changes**:
+   ```bash
+   git add .
+   git commit -m "chore: update versions"
+   ```
+   
+4. **Publish to npm**:
+   ```bash
+   pnpm changeset publish
+   ```
+   
+5. **Create GitHub release**
+
+**Note**: Only maintainers with npm publish permissions can trigger releases.
 
 ## Areas for Contribution
 
