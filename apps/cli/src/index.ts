@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import packageJson from "../../../package.json";
 import analyzeCommand from "./commands/analyze";
 import riskCommand from "./commands/risk";
 import askCommand from "./commands/ask";
 import cyclesCommand from "./commands/cycles";
 import impactCommand from "./commands/impact";
+import { readFileSync } from "fs";
+import { join } from "path";
+
+const packageJson = JSON.parse(
+  readFileSync(join(__dirname, "../package.json"), "utf-8")
+);
 
 const program = new Command();
 

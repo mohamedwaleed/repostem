@@ -1,6 +1,7 @@
 {
   "name": "@repostem/engine",
-  "version": "0.1.1",
+  "version": "0.1.5",
+  "private": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -22,5 +23,6 @@
   },
   "devDependencies": {
     "vitest": "^4.1.2"
-  }
+  },
+  "license": "MIT"
 }
