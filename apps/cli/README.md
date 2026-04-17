@@ -229,6 +229,10 @@ risk = 0.4*centrality + 0.3*coupling + 0.2*churn + 0.1*circularPenalty
 - **JavaScript** (.js, .jsx)
 - **TypeScript** (.ts, .tsx)
 
+### `.gitignore` Integration
+
+By default (`respectGitignore: true`), RepoStem respects your `.gitignore` patterns. Set to `false` to analyze gitignored files.
+
 ## 📝 Output Formats
 
 ### Text Format

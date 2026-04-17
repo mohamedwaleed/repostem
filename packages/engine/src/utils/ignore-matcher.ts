@@ -10,14 +10,34 @@ export class IgnoreMatcher {
 
   shouldIgnore(filePath: string, repositoryRoot: string): boolean {
     const relativePath = path.relative(repositoryRoot, filePath);
+    const normalizedPath = relativePath.split(path.sep).join('/');
     
     for (const pattern of this.patterns) {
-      if (minimatch(relativePath, pattern, { dot: true })) {
+      // Skip negation patterns for now (they're handled separately)
+      if (pattern.startsWith('!')) {
+        continue;
+      }
+      
+      // Skip directory-only patterns (they shouldn't match files)
+      if (pattern.endsWith('/')) {
+        continue;
+      }
+      
+      // Handle patterns anchored to root (starting with /)
+      let effectivePattern = pattern;
+      let matchTarget = normalizedPath;
+      
+      if (pattern.startsWith('/')) {
+        effectivePattern = pattern.slice(1);
+        // For anchored patterns, the path should match from root
+        if (!minimatch(normalizedPath, effectivePattern, { dot: true })) {
+          continue;
+        }
         return true;
       }
       
-      const normalizedPath = relativePath.split(path.sep).join('/');
-      if (minimatch(normalizedPath, pattern, { dot: true })) {
+      // Standard glob matching
+      if (minimatch(normalizedPath, effectivePattern, { dot: true })) {
         return true;
       }
     }
@@ -27,21 +47,53 @@ export class IgnoreMatcher {
 
   shouldIgnoreDirectory(dirPath: string, repositoryRoot: string): boolean {
     const relativePath = path.relative(repositoryRoot, dirPath);
+    const normalizedPath = relativePath.split(path.sep).join('/');
+    
     for (const pattern of this.patterns) {
-      const dirPattern = pattern.endsWith('/**') ? pattern.slice(0, -3) : pattern;
-      
-      if (minimatch(relativePath, dirPattern, { dot: true })) {
-        return true;
+      // Skip negation patterns
+      if (pattern.startsWith('!')) {
+        continue;
       }
       
-      const normalizedPath = relativePath.split(path.sep).join('/');
-      if (minimatch(normalizedPath, dirPattern, { dot: true })) {
-        return true;
+      // Only ignore directories for patterns that explicitly target directories
+      
+      // Handle patterns ending with /** (directory and all contents)
+      if (pattern.endsWith('/**')) {
+        const dirPattern = pattern.slice(0, -3);
+        if (minimatch(normalizedPath, dirPattern, { dot: true })) {
+          return true;
+        }
+        continue;
       }
       
-      if (minimatch(relativePath, pattern, { dot: true, matchBase: true })) {
-        return true;
+      // Handle patterns ending with / (directory-only)
+      if (pattern.endsWith('/')) {
+        const dirPattern = pattern.slice(0, -1);
+        if (minimatch(normalizedPath, dirPattern, { dot: true })) {
+          return true;
+        }
+        continue;
       }
+      
+      // Handle anchored patterns starting with / and ending with /
+      if (pattern.startsWith('/') && pattern.endsWith('/')) {
+        const dirPattern = pattern.slice(1, -1);
+        if (minimatch(normalizedPath, dirPattern, { dot: true })) {
+          return true;
+        }
+        continue;
+      }
+      
+      // Handle simple directory names (no slashes, no wildcards)
+      if (!pattern.includes('/') && !pattern.includes('*')) {
+        if (normalizedPath === pattern || normalizedPath.endsWith('/' + pattern)) {
+          return true;
+        }
+        continue;
+      }
+      
+      // For all other patterns (file patterns, complex globs), don't ignore the directory
+      // Let the file-level ignore handle individual files
     }
     
     return false;

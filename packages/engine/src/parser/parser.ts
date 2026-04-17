@@ -36,6 +36,7 @@ function parseRepositoryFiles(repositoryPath: string, parseOptions: ParseOptions
         files: [],
         repositoryRoot: repositoryPath
     };
+    
     while (stack.length > 0) {
         const currentPath = stack.pop()!;
         const directories = readdirSync(currentPath);
