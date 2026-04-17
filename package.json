@@ -1,6 +1,6 @@
 {
   "name": "repostem",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "AI-powered architecture and structural risk analysis for repositories",
   "private": false,
   "scripts": {
