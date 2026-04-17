@@ -8,6 +8,11 @@ on:
         required: false
         default: false
         type: boolean
+      release_notes:
+        description: 'Release notes (markdown format)'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   release:
@@ -62,6 +67,30 @@ jobs:
 
       - name: Create or Update GitHub Release
         run: |
+          # Set release notes - use user input if provided, otherwise use default
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            NOTES="${{ github.event.inputs.release_notes }}"
+          else
+            NOTES="## Changes in v${{ steps.version.outputs.version }}
+            
+            ### Features
+            - CLI tool with 5 commands (analyze, risk, ask, cycles, impact)
+            - Structural risk analysis with AI-powered explanations
+            - Dependency graph construction for JS/TS repositories
+            - Circular dependency detection
+            - Configuration support with ignore patterns
+            
+            ### Installation
+            \`\`\`bash
+            pnpm install -g @repostem/cli
+            \`\`\`
+            
+            ### Quick Start
+            \`\`\`bash
+            repostem analyze /path/to/your/repo
+            \`\`\`"
+          fi
+
           # Check if release already exists
           if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "Release v${{ steps.version.outputs.version }} already exists, updating..."
@@ -69,48 +98,14 @@ jobs:
               --title "Release v${{ steps.version.outputs.version }}" \
               --draft=false \
               --prerelease=${{ github.event.inputs.prerelease }} \
-              --notes "## Changes in v${{ steps.version.outputs.version }}
-            
-            ### Features
-            - CLI tool with 5 commands (analyze, risk, ask, cycles, impact)
-            - Structural risk analysis with AI-powered explanations
-            - Dependency graph construction for JS/TS repositories
-            - Circular dependency detection
-            - Configuration support with ignore patterns
-            
-            ### Installation
-            \`\`\`bash
-            pnpm install -g @repostem/cli
-            \`\`\`
-            
-            ### Quick Start
-            \`\`\`bash
-            repostem analyze /path/to/your/repo
-            \`\`\`"
+              --notes "$NOTES"
           else
             echo "Creating new release v${{ steps.version.outputs.version }}..."
             gh release create "v${{ steps.version.outputs.version }}" \
               --title "Release v${{ steps.version.outputs.version }}" \
               --draft=false \
               --prerelease=${{ github.event.inputs.prerelease }} \
-              --notes "## Changes in v${{ steps.version.outputs.version }}
-            
-            ### Features
-            - CLI tool with 5 commands (analyze, risk, ask, cycles, impact)
-            - Structural risk analysis with AI-powered explanations
-            - Dependency graph construction for JS/TS repositories
-            - Circular dependency detection
-            - Configuration support with ignore patterns
-            
-            ### Installation
-            \`\`\`bash
-            pnpm install -g @repostem/cli
-            \`\`\`
-            
-            ### Quick Start
-            \`\`\`bash
-            repostem analyze /path/to/your/repo
-            \`\`\`"
+              --notes "$NOTES"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
