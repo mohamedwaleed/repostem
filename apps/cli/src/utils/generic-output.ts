@@ -96,10 +96,10 @@ export class AnalysisTextFormatter implements GenericOutputFormatter {
       sections.push(chalk.bold.hex('#FFA500')("High Churn Files (Last 6 months):"));
       data.highChurnFiles.forEach((item: any) => {
         const churnScore = item.score || 0;
-        const commitEstimate = Math.round(churnScore * 100);
+        const churnPercent = Math.round(churnScore * 100);
         const classification = classify(churnScore);
         const coloredChurn = getChurnColor(churnScore)(`${classification.toLowerCase()} churn`);
-        sections.push(`${chalk.gray('-')} ${chalk.white(item.file)} (${chalk.hex('#FFA500')(`~${commitEstimate} commits`)} - ${coloredChurn})`);
+        sections.push(`${chalk.gray('-')} ${chalk.white(item.file)} (${chalk.hex('#FFA500')(`${churnPercent}%`)} - ${coloredChurn})`);
       });
       sections.push("");
     }
