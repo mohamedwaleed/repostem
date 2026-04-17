@@ -31,7 +31,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
           cache: 'pnpm'
 
@@ -115,18 +115,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish CLI to npm
-        run: |
-          cd apps/cli
-          pnpm build
-          # Check if version already exists on npm
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          PACKAGE_NAME="@repostem/cli"
-          
-          if npm view "$PACKAGE_NAME@$PACKAGE_VERSION" >/dev/null 2>&1; then
-            echo "Version $PACKAGE_VERSION already exists on npm, updating with --force"
-            npm publish --access public --force
-          else
-            echo "Publishing $PACKAGE_NAME@$PACKAGE_VERSION to npm"
-            npm publish --access public
-          fi
