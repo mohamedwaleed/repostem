@@ -1,4 +1,4 @@
-# RepoStem Architecture v0
+# RepoStem Architecture v1
 
 ## Vision
 
