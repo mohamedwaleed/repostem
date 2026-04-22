@@ -35,12 +35,15 @@ Thank you for your interest in contributing to RepoStem! This guide will help yo
 ## Project Structure
 
 ```
+├── .changeset/     # Version management and changelog
+├── .github/
+│   └── workflows/  # CI/CD and release automation
 ├── apps/
 │   └── cli/        # CLI application
 ├── packages/
 │   └── engine/     # Core analysis engine
-├── examples/        # Sample repositories for testing
-└── docs/          # Documentation
+├── examples/       # Sample repositories for testing
+└── docs/           # Documentation
 ```
 
 ## Development Workflow
