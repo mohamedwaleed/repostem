@@ -1,10 +1,10 @@
-import parseRepository from "./parser/parser";
-import { buildDependencyGraph } from "./dependency-graph/dependency-graph";
-import { computeFileMetrics, computeMetrics } from "./metrics-engine/metrics-engine";
-import { computeRisk } from "./risk-engine/risk-engine";
+import parseRepository from "./core/parser/parser";
+import { buildDependencyGraph } from "./core/dependency-graph/dependency-graph";
+import { computeFileMetrics, computeMetrics } from "./core/metrics-engine/metrics-engine";
+import { computeRisk } from "./core/risk-engine/risk-engine";
 import { Cycle, FileAnalysis, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile } from "./types";
-import { explainFileImpactUsingAI, explainFileRiskUsingAI } from "./ai-explanation-layer/ai-explaination-layer";
 import { classify } from "./utils/classify";
+import { detectIntent, explainImpactIntent, explainRiskIntent } from "./ai-explanation-layer/intent-router";
 
 interface MetricConfig {
     key: string;
@@ -59,18 +59,6 @@ function aggregateMetrics(
         config.sortDescending ? b.score - a.score : a.score - b.score
     );
 }
-// AI explanation
-const detectIntent = (question: string): string => {
-    const riskKeywords = ["risk", "risks", "threat", "threats", "danger", "hazard", "fragile"];
-    const impactKeywords = ["impact", "impacts", "consequence", "consequences", "effect", "effects", "result", "results"];
-    if (riskKeywords.some(keyword => question.toLowerCase().includes(keyword))) {
-        return "risk";
-    }
-    if (impactKeywords.some(keyword => question.toLowerCase().includes(keyword))) {
-        return "impact";
-    }
-    return "unknown";
-};
 
 async function explainFileRisk(repoPath: string, filePath: string, useAI: boolean = true): Promise<string> {
     const structuredDependenciesData = parseRepository(repoPath);
@@ -85,7 +73,7 @@ async function explainFileRisk(repoPath: string, filePath: string, useAI: boolea
     const [fileAnalysis] = computeRisk(metricsMap);
     
     if (useAI) {
-        return await explainFileRiskUsingAI(fileAnalysis);
+        return await explainRiskIntent(fileAnalysis);
     }
     return `The file ${filePath} has a risk score of ${fileAnalysis.riskScore}. It has a centrality of ${fileMetrics.centrality}, a coupling of ${fileMetrics.coupling}, and a churn of ${fileMetrics.churn}.`;
 }
@@ -101,7 +89,7 @@ async function explainFileImpact(repoPath: string, filePath: string, useAI: bool
     const fileImpact = await computeFileImpact(repoPath, filePath);
     
     if (useAI) {
-        return await explainFileImpactUsingAI(fileImpact);
+        return await explainImpactIntent(fileImpact);
     }
     return `The file ${filePath} has ${fileImpact.totalImpactCount} total dependents. This includes ${fileImpact.directDependents.length} direct dependents (${fileImpact.directDependents.join(', ')}) and ${fileImpact.transitiveDependents.length} transitive dependents (${fileImpact.transitiveDependents.slice(0, 5).join(', ')}${fileImpact.transitiveDependents.length > 5 ? '...' : ''}). Changing this file could impact ${fileImpact.totalImpactCount} files throughout the codebase.`;
 }

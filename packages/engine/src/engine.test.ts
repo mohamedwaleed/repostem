@@ -11,9 +11,17 @@ import {
 import { ProjectAnalysisResult, FileRiskResult, FileImpactResult, Cycle } from './types';
 
 // Mock AI explanation layer
-vi.mock('./ai-explanation-layer/ai-explaination-layer', () => ({
-    explainFileRiskUsingAI: vi.fn((fileAnalysis: any) => {
+vi.mock('./ai-explanation-layer/intent-router', () => ({
+    detectIntent: vi.fn((question: string) => {
+        if (question.toLowerCase().includes('risk')) return 'risk';
+        if (question.toLowerCase().includes('impact')) return 'impact';
+        return 'unknown';
+    }),
+    explainRiskIntent: vi.fn((fileAnalysis: any) => {
         return `AI explanation for ${fileAnalysis.file} with risk score ${fileAnalysis.riskScore}`;
+    }),
+    explainImpactIntent: vi.fn((fileImpact: any) => {
+        return `AI impact explanation for ${fileImpact.file} affecting ${fileImpact.totalImpactCount} files`;
     })
 }));
 
