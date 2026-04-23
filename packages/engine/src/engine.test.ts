@@ -28,6 +28,66 @@ vi.mock('./ai-explanation-layer/intent-router', () => ({
     })
 }));
 
+// Mock database adapters
+vi.mock('./persistence/adapters', () => ({
+    AdapterFactory: {
+        createAdapterFromString: vi.fn(() => ({
+            connect: vi.fn().mockResolvedValue(undefined),
+            disconnect: vi.fn().mockResolvedValue(undefined),
+            query: vi.fn().mockResolvedValue([]),
+        }))
+    },
+    DatabaseType: {
+        SQLITE: 'sqlite',
+        POSTGRESQL: 'postgresql'
+    }
+}));
+
+// Mock repositories
+vi.mock('./persistence/repositories', () => ({
+    RepoRepository: class {
+        constructor(adapter: any) {}
+        async createRepo(repoId: string, rootPath: string) {}
+        async getRepoById(repoId: string) { return undefined; }
+    },
+    SnapshotRepository: class {
+        constructor(adapter: any) {}
+        async createSnapshot(snapshot: any) {}
+        async getSnapshotsByRepoId(repoId: string) { return []; }
+        async deleteSnapshot(snapshotId: string) {}
+    }
+}));
+
+// Mock migrations
+vi.mock('./persistence/migrations', () => ({
+    runInitMigration: vi.fn().mockResolvedValue({
+        success: true,
+        message: 'Migration successful',
+        tablesCreated: ['repo', 'snapshot', 'file_snapshot', 'dependency_edge', 'cycle']
+    }),
+    isSchemaInitialized: vi.fn().mockResolvedValue(false)
+}));
+
+// Mock config functions
+const mockConfig = {
+    respectGitignore: true,
+    ignore: [],
+    storage_type: undefined as string | undefined,
+    storage_path: undefined as string | undefined,
+    repo_id: undefined as string | undefined
+};
+
+vi.mock('./config/config-loader', () => ({
+    getConfig: vi.fn(() => ({ ...mockConfig })),
+    updateConfigFile: vi.fn((repoPath: string, config: any) => {
+        Object.assign(mockConfig, config);
+        return '/path/to/.repostem.json';
+    }),
+    isPersistenceConfigured: vi.fn(() => !!mockConfig.storage_type && !!mockConfig.storage_path && !!mockConfig.repo_id),
+    checkConfigFile: vi.fn(() => false),
+    getAllIgnorePatterns: vi.fn(() => ['node_modules/**', '.git/**', 'dist/**'])
+}));
+
 const sharedFixturesRoot = path.resolve(__dirname, "__tests__", "fixtures", "shared");
 const basicRepoPath = path.join(sharedFixturesRoot, "basic-repo");
 
@@ -634,6 +694,13 @@ describe('Engine - Integration Tests', () => {
 });
 
 describe('Engine - Persistence Functions', () => {
+    beforeEach(() => {
+        // Reset mock config state before each test
+        mockConfig.storage_type = undefined;
+        mockConfig.storage_path = undefined;
+        mockConfig.repo_id = undefined;
+    });
+
     describe('initializeRepo', () => {
         it('should initialize repository with new repo_id', async () => {
             const testRepoPath = '/tmp/test-repostem-init-repo';
@@ -651,6 +718,7 @@ describe('Engine - Persistence Functions', () => {
             expect(result.config.storage_type).toBe('sqlite');
             expect(result.config.storage_path).toBe('/tmp/test-repostem-init.db');
             expect(result.migrationResult).toBeDefined();
+            expect(result.migrationResult.success).toBe(true);
         });
 
         it('should use existing repo_id when provided (reconfiguration)', async () => {
