@@ -6,6 +6,7 @@ import riskCommand from "./commands/risk";
 import askCommand from "./commands/ask";
 import cyclesCommand from "./commands/cycles";
 import impactCommand from "./commands/impact";
+import initCommand from "./commands/init";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -20,6 +21,7 @@ program
   .description(packageJson.description)
   .version(packageJson.version);
 
+program.addCommand(initCommand);
 program.addCommand(analyzeCommand);
 program.addCommand(riskCommand);
 program.addCommand(impactCommand);

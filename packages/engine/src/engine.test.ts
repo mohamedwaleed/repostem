@@ -6,7 +6,10 @@ import {
     computeFileImpact,
     detectRepositoryCycles,
     ask,
-    explainFileRisk
+    explainFileRisk,
+    initializeRepo,
+    isRepoInitialized,
+    resetPersistence
 } from './engine';
 import { ProjectAnalysisResult, FileRiskResult, FileImpactResult, Cycle } from './types';
 
@@ -626,6 +629,87 @@ describe('Engine - Integration Tests', () => {
             const validResults = results.filter(r => r !== null);
             
             expect(validResults.length).toBeGreaterThan(0);
+        });
+    });
+});
+
+describe('Engine - Persistence Functions', () => {
+    describe('initializeRepo', () => {
+        it('should initialize repository with new repo_id', async () => {
+            const testRepoPath = '/tmp/test-repostem-init-repo';
+            const result = await initializeRepo(testRepoPath, {
+                storageType: 'sqlite',
+                storagePath: '/tmp/test-repostem-init.db'
+            });
+
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.repoId).toBeDefined();
+            expect(typeof result.repoId).toBe('string');
+            expect(result.config).toBeDefined();
+            expect(result.config.repo_id).toBe(result.repoId);
+            expect(result.config.storage_type).toBe('sqlite');
+            expect(result.config.storage_path).toBe('/tmp/test-repostem-init.db');
+            expect(result.migrationResult).toBeDefined();
+        });
+
+        it('should use existing repo_id when provided (reconfiguration)', async () => {
+            const testRepoPath = '/tmp/test-repostem-reconfigure';
+            const existingRepoId = 'test-repo-id-12345';
+            
+            const result = await initializeRepo(testRepoPath, {
+                storageType: 'sqlite',
+                storagePath: '/tmp/test-repostem-reconfigure.db',
+                repoId: existingRepoId
+            });
+
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.repoId).toBe(existingRepoId);
+            expect(result.config.repo_id).toBe(existingRepoId);
+        });
+    });
+
+    describe('isRepoInitialized', () => {
+        it('should return false when repo is not initialized', () => {
+            const testRepoPath = '/tmp/test-repostem-not-initialized';
+            const result = isRepoInitialized(testRepoPath);
+            expect(result).toBe(false);
+        });
+
+        it('should return true when repo is initialized', () => {
+            const testRepoPath = '/tmp/test-repostem-initialized';
+            const result = isRepoInitialized(testRepoPath);
+            expect(typeof result).toBe('boolean');
+        });
+    });
+
+    describe('resetPersistence', () => {
+        it('should reset persistence and delete snapshots', async () => {
+            const testRepoPath = '/tmp/test-repostem-reset';
+            
+            // First initialize the repo
+            await initializeRepo(testRepoPath, {
+                storageType: 'sqlite',
+                storagePath: '/tmp/test-repostem-reset.db'
+            });
+            
+            // Then reset it
+            const result = await resetPersistence(testRepoPath);
+
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.message).toBeDefined();
+            expect(typeof result.snapshotsDeleted).toBe('number');
+            expect(result.snapshotsDeleted).toBeGreaterThanOrEqual(0);
+        });
+
+        it('should throw error when repo is not properly initialized', async () => {
+            const testRepoPath = '/tmp/test-repostem-not-init';
+            
+            await expect(
+                resetPersistence(testRepoPath)
+            ).rejects.toThrow();
         });
     });
 });

@@ -1,7 +1,8 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
+  - apps/*
+  - packages/*
 ignoredBuiltDependencies:
+  - sqlite3
   - tree-sitter
   - tree-sitter-javascript
   - tree-sitter-typescript

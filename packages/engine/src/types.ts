@@ -103,7 +103,25 @@ export enum MetricClassification {
     HIGH = "high"
 }
 
+export type StorageType = 'sqlite' | 'postgresql';
+
 export interface RepoStemConfig {
   ignore?: string[];
   respectGitignore?: boolean;
+  storage_type?: StorageType;
+  storage_path?: string;
+  repo_id?: string;
+}
+
+export interface ResetPersistenceResult {
+  success: boolean;
+  message: string;
+  snapshotsDeleted: number;
+}
+
+export interface MetricConfig {
+    key: string;
+    extractValue: (fileAnalysis: FileAnalysis, metrics: any) => number;
+    threshold?: number;
+    sortDescending?: boolean;
 }

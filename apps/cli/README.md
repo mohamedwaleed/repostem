@@ -82,6 +82,34 @@ repostem ask "Is src/api/client.js fragile?"
 
 ## 📋 Commands
 
+### `init`
+Initialize repository for snapshot persistence with SQLite or PostgreSQL.
+
+```bash
+repostem init [options]
+```
+
+**Options:**
+- `-r, --repo <path>`: Path to repository (default: current directory)
+- `-s, --storage <type>`: Storage type - `sqlite` or `postgresql` (default: prompt)
+- `-p, --db-path <path>`: Database path for SQLite or connection string for PostgreSQL
+
+**Reconfiguration:**
+If you run `repostem init` on an already initialized repository, you'll see options:
+- **Reconfigure storage backend** - Change storage type/path while preserving repo_id
+- **Reset persistence** - Delete all snapshots but keep repo record
+- **Cancel** - Exit without changes
+
+**Example:**
+```bash
+# Interactive mode
+repostem init
+
+# With flags
+repostem init --storage sqlite --db-path .repostem.db
+repostem init --storage postgresql --db-path postgresql://user:pass@localhost/db
+```
+
 ### `analyze`
 Run full structural analysis on the repository and print project-level structural summary.
 
