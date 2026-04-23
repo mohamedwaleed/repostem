@@ -173,17 +173,21 @@ the comparison logic will be as follows:
 
 ## repostem init
 - check if a config file `.repostem.json` exists in the current directory
-- if the file exists, warn the user the project is already initialized and the config will be overwritten
-- if not, ask the user if they want to persist snapshots in the SQL database,
-- if yes, make the user to select the storage type (SQLite orPostgreSQL)
-- if SQLite, create a SQL database file `.repostem.db` in the current directory
+- if the file exists and the repo is already initialized, present the user with options:
+  1. Reconfigure storage backend (change storage type/path while preserving repo_id)
+  2. Reset persistence (delete all snapshots but keep repo record)
+  3. Cancel
+- if the file does not exist, ask the user to select the storage type (SQLite or PostgreSQL)
+- if SQLite, create a SQL database file `.repostem.db` in the current directory (or custom path)
 - if PostgreSQL, ask the user to provide the connection string
-- save the config file `.repostem.json` in the current directory if it doesn't exist otherwise update it
+- save the config file `.repostem.json` in the current directory
 - the config file will contain the following fields:
   - storage_type (SQLite or PostgreSQL)
   - storage_path (path to the SQL database file for SQLite or connection string for PostgreSQL)
+  - repo_id (unique identifier for the repository)
 - initialize the database schema
-- generate a repo_id using `uuid.uuid4()` and save it in the table `repo` along with the root path
+- generate a repo_id using UUID and save it in the table `repo` along with the root path
+- when reconfiguring storage, the existing repo_id is preserved to maintain identity across storage changes
 
 ## repostem analyze
 - check if a config file `.repostem.json` exists in the current directory
@@ -390,3 +394,5 @@ in this version, this command will cover more qeustions allowing the users to as
 - AI never computes structural metrics; it only explains deterministic results.
 - Snapshots represent structural state at time T, not Git commit state (Snapshots may represent uncommitted working tree states.
 Commit metadata is informational only.)
+- Persistence is optional and configured via `repostem init`.
+- Running `repostem init` again does not regenerate `repo_id` unless explicitly reset

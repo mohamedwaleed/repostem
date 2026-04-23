@@ -2,16 +2,14 @@ import parseRepository from "./core/parser/parser";
 import { buildDependencyGraph } from "./core/dependency-graph/dependency-graph";
 import { computeFileMetrics, computeMetrics } from "./core/metrics-engine/metrics-engine";
 import { computeRisk } from "./core/risk-engine/risk-engine";
-import { Cycle, FileAnalysis, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile } from "./types";
+import { Cycle, FileAnalysis, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile, RepoStemConfig, ResetPersistenceResult, StorageType } from "./types";
 import { classify } from "./utils/classify";
 import { detectIntent, explainImpactIntent, explainRiskIntent } from "./ai-explanation-layer/intent-router";
-
-interface MetricConfig {
-    key: string;
-    extractValue: (fileAnalysis: FileAnalysis, metrics: any) => number;
-    threshold?: number;
-    sortDescending?: boolean;
-}
+import { AdapterFactory } from "./persistence/adapters";
+import { runInitMigration, MigrationResult } from "./persistence/migrations";
+import { RepoRepository, SnapshotRepository } from "./persistence/repositories";
+import { getConfig, updateConfigFile, isPersistenceConfigured } from "./config/config-loader";
+import { MetricConfig } from "./types";
 
 const intentMap: Record<string, (repoPath: string, filePath: string, explain?: boolean) => Promise<string>> = {
     "risk": explainFileRisk,
@@ -176,4 +174,165 @@ export async function ask(question: string, repoPath: string): Promise<string> {
     return intentMap[intent](repoPath, filePath, true);
 }
 
-export { classify, explainFileRisk, explainFileImpact };
+///////////////////////////////////////////////////////////////////////////////
+// Repository Initialization
+
+/**
+ * Options for initializing a repository
+ */
+export interface InitRepoOptions {
+  storageType: StorageType;
+  storagePath: string;
+  repoId?: string;
+}
+
+/**
+ * Result of initializing a repository
+ */
+export interface InitRepoResult {
+  success: boolean;
+  repoId: string;
+  config: RepoStemConfig;
+  migrationResult: MigrationResult;
+  message: string;
+}
+
+/**
+ * Initialize a repository for persistence
+ * 
+ * @param repositoryRoot - The root path of the repository
+ * @param options - Initialization options (storageType, storagePath)
+ * @returns InitRepoResult with repoId and config
+ */
+async function initializeRepo(
+  repositoryRoot: string,
+  options: InitRepoOptions
+): Promise<InitRepoResult> {
+  const { storageType, storagePath, repoId: existingRepoId } = options;
+
+  // Create database adapter
+  const adapter = AdapterFactory.createAdapterFromString(storageType, storagePath);
+
+  try {
+    // Connect to database
+    await adapter.connect();
+
+    // Run migrations
+    const migrationResult = await runInitMigration(adapter);
+
+    if (!migrationResult.success) {
+      throw new Error(`Migration failed: ${migrationResult.message}`);
+    }
+
+    const repoRepository = new RepoRepository(adapter);
+    let repoId: string;
+
+    if (existingRepoId) {
+      // Use existing repo_id (for reconfiguration)
+      repoId = existingRepoId;
+      
+      // Check if repo record exists in new database
+      const existingRepo = await repoRepository.getRepoById(repoId);
+      
+      if (!existingRepo) {
+        // Insert repo record if missing
+        await repoRepository.createRepo(repoId, repositoryRoot);
+      }
+    } else {
+      // Generate new repo UUID (for new initialization)
+      repoId = crypto.randomUUID();
+      await repoRepository.createRepo(repoId, repositoryRoot);
+    }
+
+    // Update config file with repo_id
+    updateConfigFile(repositoryRoot, {
+      storage_type: storageType,
+      storage_path: storagePath,
+      repo_id: repoId,
+    });
+
+    // Get the updated config
+    const updatedConfig = getConfig(repositoryRoot);
+
+    // Disconnect from database
+    await adapter.disconnect();
+
+    return {
+      success: true,
+      repoId,
+      config: updatedConfig,
+      migrationResult,
+      message: `Repository initialized successfully.\n` +
+        `Repo ID: ${repoId}\n` +
+        `Storage: ${storageType} at ${storagePath}\n` +
+        `Tables created: ${migrationResult.tablesCreated.length}`,
+    };
+  } catch (error) {
+    // Ensure disconnect on error
+    try {
+      await adapter.disconnect();
+    } catch {
+      // Ignore disconnect errors
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Check if a repository is initialized for persistence
+ * 
+ * @param repositoryRoot - The root path of the repository
+ * @returns True if persistence is configured
+ */
+function isRepoInitialized(repositoryRoot: string): boolean {
+  return isPersistenceConfigured(repositoryRoot);
+}
+
+/**
+ * Reset persistence by deleting all snapshots for a repository
+ * This keeps the repo record but deletes all associated snapshots and their data
+ * 
+ * @param repositoryRoot - The root path of the repository
+ * @returns ResetPersistenceResult indicating success and number of snapshots deleted
+ */
+export async function resetPersistence(repositoryRoot: string): Promise<ResetPersistenceResult> {
+  const config = getConfig(repositoryRoot);
+
+  if (!config.storage_type || !config.storage_path || !config.repo_id) {
+    throw new Error("Repository is not properly initialized for persistence.");
+  }
+
+  const adapter = AdapterFactory.createAdapterFromString(config.storage_type, config.storage_path);
+
+  try {
+    await adapter.connect();
+
+    const snapshotRepository = new SnapshotRepository(adapter);
+    const snapshots = await snapshotRepository.getSnapshotsByRepoId(config.repo_id);
+
+    const snapshotCount = snapshots.length;
+
+    // Delete all snapshots (cascade will delete related data)
+    for (const snapshot of snapshots) {
+      await snapshotRepository.deleteSnapshot(snapshot.id);
+    }
+
+    await adapter.disconnect();
+
+    return {
+      success: true,
+      message: `Successfully reset persistence. Deleted ${snapshotCount} snapshot(s).`,
+      snapshotsDeleted: snapshotCount,
+    };
+  } catch (error) {
+    try {
+      await adapter.disconnect();
+    } catch {
+      // Ignore disconnect errors
+    }
+    throw error;
+  }
+}
+
+export { classify, explainFileRisk, explainFileImpact, initializeRepo, isRepoInitialized };

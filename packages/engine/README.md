@@ -127,6 +127,53 @@ Classifies repository structure and patterns.
 const classification = await classify('/path/to/repo');
 ```
 
+### `initializeRepo(repositoryRoot: string, options: InitRepoOptions)`
+
+Initialize repository for snapshot persistence with SQLite or PostgreSQL.
+
+```typescript
+const result = await initializeRepo('/path/to/repo', {
+  storageType: 'sqlite',
+  storagePath: '.repostem.db',
+  repoId: 'optional-existing-repo-id' // for reconfiguration
+});
+
+// Returns:
+{
+  success: boolean;
+  repoId: string;
+  config: RepoStemConfig;
+  migrationResult: MigrationResult;
+  message: string;
+}
+```
+
+**Note**: When reconfiguring storage, provide the existing `repoId` to preserve repository identity.
+
+### `isRepoInitialized(repositoryRoot: string)`
+
+Check if a repository is initialized for persistence.
+
+```typescript
+const initialized = isRepoInitialized('/path/to/repo');
+// Returns: boolean
+```
+
+### `resetPersistence(repositoryRoot: string)`
+
+Reset persistence by deleting all snapshots for a repository while keeping the repo record.
+
+```typescript
+const result = await resetPersistence('/path/to/repo');
+
+// Returns:
+{
+  success: boolean;
+  message: string;
+  snapshotsDeleted: number;
+}
+```
+
 ## Metrics Explained
 
 ### Centrality

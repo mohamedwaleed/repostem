@@ -10,6 +10,9 @@ RepoStem is a CLI tool that analyzes repositories as dependency graphs, computes
 # Install
 npm install -g @repostem/cli
 
+# Initialize persistence (optional)
+repostem init
+
 # Analyze a repository
 repostem analyze /path/to/your/repo
 
@@ -34,6 +37,7 @@ RepoStem aims to evolve into an AI Project Brain — a persistent cognition laye
 - **AI-Powered Insights**: Get natural language explanations of architectural issues
 
 ### CLI Commands
+- `init` - Initialize persistence for snapshot storage (SQLite or PostgreSQL)
 - `analyze` - Full repository analysis with dependency graph
 - `risk` - Risk metrics and scoring for all files
 - `cycles` - Detect and report circular dependencies
@@ -79,6 +83,40 @@ repostem ask /path/to/your/repo "Is src/utils.js fragile?"
 # Configuration
 
 RepoStem can be configured using a `.repostem.json` or `repostem.config.json` file in your repository root.
+
+## Persistence Configuration
+
+Use `repostem init` to enable snapshot persistence:
+
+```bash
+# Interactive mode
+repostem init
+
+# With flags
+repostem init --storage sqlite --db-path .repostem.db
+repostem init --storage postgresql --db-path postgresql://user:pass@localhost/db
+```
+
+This creates a `.repostem.json` configuration file:
+
+```json
+{
+  "respectGitignore": true,
+  "ignore": [],
+  "storage_type": "sqlite",
+  "storage_path": ".repostem.db",
+  "repo_id": "uuid-v4"
+}
+```
+
+### Reconfiguration
+
+If you run `repostem init` again on an already initialized repository, you'll see options:
+- **Reconfigure storage backend** - Change storage type/path while preserving repo_id
+- **Reset persistence** - Delete all snapshots but keep repo record
+- **Cancel** - Exit without changes
+
+The `repo_id` is preserved across storage reconfigurations to maintain repository identity.
 
 ## Ignore Patterns
 

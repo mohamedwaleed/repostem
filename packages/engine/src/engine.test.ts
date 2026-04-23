@@ -6,7 +6,10 @@ import {
     computeFileImpact,
     detectRepositoryCycles,
     ask,
-    explainFileRisk
+    explainFileRisk,
+    initializeRepo,
+    isRepoInitialized,
+    resetPersistence
 } from './engine';
 import { ProjectAnalysisResult, FileRiskResult, FileImpactResult, Cycle } from './types';
 
@@ -23,6 +26,66 @@ vi.mock('./ai-explanation-layer/intent-router', () => ({
     explainImpactIntent: vi.fn((fileImpact: any) => {
         return `AI impact explanation for ${fileImpact.file} affecting ${fileImpact.totalImpactCount} files`;
     })
+}));
+
+// Mock database adapters
+vi.mock('./persistence/adapters', () => ({
+    AdapterFactory: {
+        createAdapterFromString: vi.fn(() => ({
+            connect: vi.fn().mockResolvedValue(undefined),
+            disconnect: vi.fn().mockResolvedValue(undefined),
+            query: vi.fn().mockResolvedValue([]),
+        }))
+    },
+    DatabaseType: {
+        SQLITE: 'sqlite',
+        POSTGRESQL: 'postgresql'
+    }
+}));
+
+// Mock repositories
+vi.mock('./persistence/repositories', () => ({
+    RepoRepository: class {
+        constructor(adapter: any) {}
+        async createRepo(repoId: string, rootPath: string) {}
+        async getRepoById(repoId: string) { return undefined; }
+    },
+    SnapshotRepository: class {
+        constructor(adapter: any) {}
+        async createSnapshot(snapshot: any) {}
+        async getSnapshotsByRepoId(repoId: string) { return []; }
+        async deleteSnapshot(snapshotId: string) {}
+    }
+}));
+
+// Mock migrations
+vi.mock('./persistence/migrations', () => ({
+    runInitMigration: vi.fn().mockResolvedValue({
+        success: true,
+        message: 'Migration successful',
+        tablesCreated: ['repo', 'snapshot', 'file_snapshot', 'dependency_edge', 'cycle']
+    }),
+    isSchemaInitialized: vi.fn().mockResolvedValue(false)
+}));
+
+// Mock config functions
+const mockConfig = {
+    respectGitignore: true,
+    ignore: [],
+    storage_type: undefined as string | undefined,
+    storage_path: undefined as string | undefined,
+    repo_id: undefined as string | undefined
+};
+
+vi.mock('./config/config-loader', () => ({
+    getConfig: vi.fn(() => ({ ...mockConfig })),
+    updateConfigFile: vi.fn((repoPath: string, config: any) => {
+        Object.assign(mockConfig, config);
+        return '/path/to/.repostem.json';
+    }),
+    isPersistenceConfigured: vi.fn(() => !!mockConfig.storage_type && !!mockConfig.storage_path && !!mockConfig.repo_id),
+    checkConfigFile: vi.fn(() => false),
+    getAllIgnorePatterns: vi.fn(() => ['node_modules/**', '.git/**', 'dist/**'])
 }));
 
 const sharedFixturesRoot = path.resolve(__dirname, "__tests__", "fixtures", "shared");
@@ -626,6 +689,95 @@ describe('Engine - Integration Tests', () => {
             const validResults = results.filter(r => r !== null);
             
             expect(validResults.length).toBeGreaterThan(0);
+        });
+    });
+});
+
+describe('Engine - Persistence Functions', () => {
+    beforeEach(() => {
+        // Reset mock config state before each test
+        mockConfig.storage_type = undefined;
+        mockConfig.storage_path = undefined;
+        mockConfig.repo_id = undefined;
+    });
+
+    describe('initializeRepo', () => {
+        it('should initialize repository with new repo_id', async () => {
+            const testRepoPath = '/tmp/test-repostem-init-repo';
+            const result = await initializeRepo(testRepoPath, {
+                storageType: 'sqlite',
+                storagePath: '/tmp/test-repostem-init.db'
+            });
+
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.repoId).toBeDefined();
+            expect(typeof result.repoId).toBe('string');
+            expect(result.config).toBeDefined();
+            expect(result.config.repo_id).toBe(result.repoId);
+            expect(result.config.storage_type).toBe('sqlite');
+            expect(result.config.storage_path).toBe('/tmp/test-repostem-init.db');
+            expect(result.migrationResult).toBeDefined();
+            expect(result.migrationResult.success).toBe(true);
+        });
+
+        it('should use existing repo_id when provided (reconfiguration)', async () => {
+            const testRepoPath = '/tmp/test-repostem-reconfigure';
+            const existingRepoId = 'test-repo-id-12345';
+            
+            const result = await initializeRepo(testRepoPath, {
+                storageType: 'sqlite',
+                storagePath: '/tmp/test-repostem-reconfigure.db',
+                repoId: existingRepoId
+            });
+
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.repoId).toBe(existingRepoId);
+            expect(result.config.repo_id).toBe(existingRepoId);
+        });
+    });
+
+    describe('isRepoInitialized', () => {
+        it('should return false when repo is not initialized', () => {
+            const testRepoPath = '/tmp/test-repostem-not-initialized';
+            const result = isRepoInitialized(testRepoPath);
+            expect(result).toBe(false);
+        });
+
+        it('should return true when repo is initialized', () => {
+            const testRepoPath = '/tmp/test-repostem-initialized';
+            const result = isRepoInitialized(testRepoPath);
+            expect(typeof result).toBe('boolean');
+        });
+    });
+
+    describe('resetPersistence', () => {
+        it('should reset persistence and delete snapshots', async () => {
+            const testRepoPath = '/tmp/test-repostem-reset';
+            
+            // First initialize the repo
+            await initializeRepo(testRepoPath, {
+                storageType: 'sqlite',
+                storagePath: '/tmp/test-repostem-reset.db'
+            });
+            
+            // Then reset it
+            const result = await resetPersistence(testRepoPath);
+
+            expect(result).toBeDefined();
+            expect(result.success).toBe(true);
+            expect(result.message).toBeDefined();
+            expect(typeof result.snapshotsDeleted).toBe('number');
+            expect(result.snapshotsDeleted).toBeGreaterThanOrEqual(0);
+        });
+
+        it('should throw error when repo is not properly initialized', async () => {
+            const testRepoPath = '/tmp/test-repostem-not-init';
+            
+            await expect(
+                resetPersistence(testRepoPath)
+            ).rejects.toThrow();
         });
     });
 });
