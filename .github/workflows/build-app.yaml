@@ -12,6 +12,6 @@ jobs:
       - run: npm install -g pnpm
       - run: sudo apt-get update && sudo apt-get install -y python3 make g++
       - run: pnpm install
-      - run: pnpm rebuild sqlite3 --build-from-source
+      - run: npm rebuild sqlite3 --build-from-source
       - run: pnpm -r test
       - run: pnpm -r build
