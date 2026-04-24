@@ -103,8 +103,8 @@ async function explainFileImpact(repoPath: string, filePath: string, useAI: bool
 export async function analyzeRepository(repoPath: string): Promise<ProjectAnalysisResult> {
     const structuredDependenciesData = parseRepository(repoPath);
     const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
-    const fileMetrics = await computeMetrics(dependencyGraph);
-    const filesRiskResult = computeRisk(fileMetrics);
+    const filesMetrics = await computeMetrics(dependencyGraph);
+    const filesRiskResult = computeRisk(filesMetrics);
     
     const centralityConfig = METRIC_CONFIGS.find(c => c.key === 'centrality')!;
     const riskConfig = METRIC_CONFIGS.find(c => c.key === 'riskScore')!;
@@ -112,7 +112,7 @@ export async function analyzeRepository(repoPath: string): Promise<ProjectAnalys
 
     const cycles: Cycle[] = dependencyGraph.detectCycles();
     const filesAnalysis = filesRiskResult.map((fileRiskResult) => {
-        const metrics = fileMetrics.get(fileRiskResult.file)!;
+        const metrics = filesMetrics.get(fileRiskResult.file)!;
         return {
             ...fileRiskResult,
             metrics
@@ -122,9 +122,9 @@ export async function analyzeRepository(repoPath: string): Promise<ProjectAnalys
         totalFiles: dependencyGraph.getNodes().size,
         totalDependencies: dependencyGraph.getEdges().size,
         cycleCount: cycles.length,
-        topCentralFiles: aggregateMetrics(filesAnalysis, fileMetrics, centralityConfig).slice(0, 5),
-        highChurnFiles: aggregateMetrics(filesAnalysis, fileMetrics, churnConfig).slice(0, 5),
-        topRiskFiles: aggregateMetrics(filesAnalysis, fileMetrics, riskConfig).slice(0, 5)
+        topCentralFiles: aggregateMetrics(filesAnalysis, filesMetrics, centralityConfig).slice(0, 5),
+        highChurnFiles: aggregateMetrics(filesAnalysis, filesMetrics, churnConfig).slice(0, 5),
+        topRiskFiles: aggregateMetrics(filesAnalysis, filesMetrics, riskConfig).slice(0, 5)
     };
 }
 
