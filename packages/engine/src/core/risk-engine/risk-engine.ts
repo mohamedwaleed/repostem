@@ -1,4 +1,6 @@
-import { FileAnalysis } from "../../types";
+import { classify } from "../../engine";
+import { FileMetrics, FileRiskResult } from "../../types";
+import IGraph from "../dependency-graph/graph-implementations/graph-interface";
 
 const WEIGHTS = {
     centrality: 0.3,
@@ -7,20 +9,36 @@ const WEIGHTS = {
     churn: 0.2,
 };
 
-export const computeRisk = (fileMetrics: Map<string, Record<string, number>>): FileAnalysis[] => {
-    const files = Array.from(fileMetrics.keys());
-    return files.map((file) => {
-        const metrics = fileMetrics.get(file)!;
+export const computeFileRisk = (filePath: string, fileMetrics: FileMetrics): FileRiskResult => {
+    const riskScore = 
+        WEIGHTS.centrality * fileMetrics.centrality +
+        WEIGHTS.coupling * fileMetrics.coupling +
+        WEIGHTS.circularDependency * fileMetrics.circularDependency +
+        WEIGHTS.churn * fileMetrics.churn;
+    
+    return {
+        file: filePath,
+        riskScore,
+        riskLevel: classify(riskScore),
+    };
+};
+
+export const computeRisk = (fileMetrics: Map<string, FileMetrics>): Array<FileRiskResult> => {
+    const results: Array<FileRiskResult> = [];
+    
+    for (const [filePath, metrics] of fileMetrics.entries()) {
         const riskScore = 
             WEIGHTS.centrality * metrics.centrality +
             WEIGHTS.coupling * metrics.coupling +
             WEIGHTS.circularDependency * metrics.circularDependency +
             WEIGHTS.churn * metrics.churn;
         
-        return {
-            file,
+        results.push({
+            file: filePath,
             riskScore,
-            metrics,
-        };
-    });
+            riskLevel: classify(riskScore),
+        });
+    }
+    
+    return results;
 };

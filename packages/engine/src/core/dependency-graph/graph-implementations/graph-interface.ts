@@ -12,4 +12,6 @@ export default interface IGraph {
     getEdges(): Map<string, Set<string>>;
     getRepositoryRoot(): string;
     
+    getDirectDependent(node: string): string[];
+    getTransitiveDependents(node: string): string[];
 }

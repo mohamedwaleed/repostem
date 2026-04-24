@@ -5,7 +5,7 @@ import { CentralityMetric } from "./metrics/centrality";
 import { CouplingMetric } from "./metrics/coupling";
 import { CircularDependencyMetric } from "./metrics/circular-dependency";
 import { ChurnMetric } from "./metrics/churn";
-import { MetricContext } from "../../types";
+import { FileMetrics, MetricContext } from "../../types";
 
 export class MetricsComputer {
     private metrics: IMetric[] = [];
@@ -65,7 +65,7 @@ export class MetricsComputer {
         }
     }
     
-    async computeMetrics(dependencyGraph: IGraph) {
+    async computeMetrics(dependencyGraph: IGraph): Promise<Map<string, FileMetrics>> {
         const nodes = Array.from(dependencyGraph.getNodes().keys());
         const repositoryRoot = dependencyGraph.getRepositoryRoot();
         
@@ -94,7 +94,7 @@ export class MetricsComputer {
             commitsPerFile
         };
         
-        const fileMetrics: Map<string, Record<string, number>> = new Map();
+        const fileMetrics: Map<string, FileMetrics> = new Map();
         
         for (const nodePath of nodes) {
             const metricsForFile: Record<string, number> = {};
@@ -102,13 +102,13 @@ export class MetricsComputer {
                 const result = metric.compute(dependencyGraph, nodePath, context);
                 metricsForFile[metric.key] = result instanceof Promise ? await result : result;
             }
-            fileMetrics.set(nodePath, metricsForFile);
+            fileMetrics.set(nodePath, metricsForFile as FileMetrics);
         }
         
         return fileMetrics;
     }
 
-    async computeFileMetrics(dependencyGraph: IGraph, filePath: string) {
+    async computeFileMetrics(dependencyGraph: IGraph, filePath: string): Promise<FileMetrics> {
         const nodes = Array.from(dependencyGraph.getNodes().keys());
         const repositoryRoot = dependencyGraph.getRepositoryRoot();
         
@@ -143,6 +143,6 @@ export class MetricsComputer {
             metricsForFile[metric.key] = result instanceof Promise ? await result : result;
         }
         
-        return metricsForFile;
+        return metricsForFile as FileMetrics;
     }
 }

@@ -7,9 +7,7 @@ export {
     classify,
     initializeRepo,
     isRepoInitialized,
-    resetPersistence,
-    InitRepoOptions,
-    InitRepoResult
+    resetPersistence
 } from './engine';
 
 export { getMetricLabel, METRIC_LABELS } from './metric-labels';
