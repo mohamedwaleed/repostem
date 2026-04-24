@@ -1,15 +1,17 @@
 import parseRepository from "./core/parser/parser";
 import { buildDependencyGraph } from "./core/dependency-graph/dependency-graph";
 import { computeFileMetrics, computeMetrics } from "./core/metrics-engine/metrics-engine";
-import { computeRisk } from "./core/risk-engine/risk-engine";
-import { Cycle, FileAnalysis, FileImpactResult, FileRiskResult, ProjectAnalysisResult, RankedFile, RepoStemConfig, ResetPersistenceResult, StorageType } from "./types";
+import { computeFileRisk, computeRisk } from "./core/risk-engine/risk-engine";
+import { Cycle, FileAnalysis, FileImpactResult, FileRiskAnalysisResult, FileRiskResult, InitRepoOptions, InitRepoResult, ProjectAnalysisResult, RankedFile, ResetPersistenceResult } from "./types";
 import { classify } from "./utils/classify";
 import { detectIntent, explainImpactIntent, explainRiskIntent } from "./ai-explanation-layer/intent-router";
 import { AdapterFactory } from "./persistence/adapters";
-import { runInitMigration, MigrationResult } from "./persistence/migrations";
+import { runInitMigration } from "./persistence/migrations";
 import { RepoRepository, SnapshotRepository } from "./persistence/repositories";
 import { getConfig, updateConfigFile, isPersistenceConfigured } from "./config/config-loader";
 import { MetricConfig } from "./types";
+import { computeImpact } from "./core/impact-engine/impact-engine";
+import { merge } from "lodash";
 
 const intentMap: Record<string, (repoPath: string, filePath: string, explain?: boolean) => Promise<string>> = {
     "risk": explainFileRisk,
@@ -67,9 +69,13 @@ async function explainFileRisk(repoPath: string, filePath: string, useAI: boolea
     }
     
     const fileMetrics = await computeFileMetrics(dependencyGraph, filePath);
-    const metricsMap = new Map([[filePath, fileMetrics]]);
-    const [fileAnalysis] = computeRisk(metricsMap);
-    
+    const fileRiskResult = computeFileRisk(filePath, fileMetrics);
+    const fileAnalysis = {
+        file: filePath,
+        metrics: fileMetrics,
+        riskScore: fileRiskResult.riskScore,
+        riskLevel: fileRiskResult.riskLevel
+    };
     if (useAI) {
         return await explainRiskIntent(fileAnalysis);
     }
@@ -98,16 +104,22 @@ export async function analyzeRepository(repoPath: string): Promise<ProjectAnalys
     const structuredDependenciesData = parseRepository(repoPath);
     const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
     const fileMetrics = await computeMetrics(dependencyGraph);
-    const filesAnalysis = computeRisk(fileMetrics);
-
+    const filesRiskResult = computeRisk(fileMetrics);
+    
     const centralityConfig = METRIC_CONFIGS.find(c => c.key === 'centrality')!;
     const riskConfig = METRIC_CONFIGS.find(c => c.key === 'riskScore')!;
     const churnConfig = METRIC_CONFIGS.find(c => c.key === 'churn')!;
 
     const cycles: Cycle[] = dependencyGraph.detectCycles();
-    
+    const filesAnalysis = filesRiskResult.map((fileRiskResult) => {
+        const metrics = fileMetrics.get(fileRiskResult.file)!;
+        return {
+            ...fileRiskResult,
+            metrics
+        };
+    });
     return {
-        totalFiles: filesAnalysis.length,
+        totalFiles: dependencyGraph.getNodes().size,
         totalDependencies: dependencyGraph.getEdges().size,
         cycleCount: cycles.length,
         topCentralFiles: aggregateMetrics(filesAnalysis, fileMetrics, centralityConfig).slice(0, 5),
@@ -117,7 +129,7 @@ export async function analyzeRepository(repoPath: string): Promise<ProjectAnalys
 }
 
 // File-level deterministic
-export async function analyzeFileRisk(repoPath: string, filePath: string): Promise<FileRiskResult> {
+export async function analyzeFileRisk(repoPath: string, filePath: string): Promise<FileRiskAnalysisResult> {
     const structuredDependenciesData = parseRepository(repoPath);
     const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
     
@@ -126,16 +138,15 @@ export async function analyzeFileRisk(repoPath: string, filePath: string): Promi
     }
     
     const fileMetrics = await computeFileMetrics(dependencyGraph, filePath);
-    const metricsMap = new Map([[filePath, fileMetrics]]);
-    const [fileAnalysis] = computeRisk(metricsMap);
-    
+    const fileRiskResult = computeFileRisk(filePath, fileMetrics);
     return {
         file: filePath,
         centrality: fileMetrics.centrality || 0,
         coupling: fileMetrics.coupling || 0,
         churn: fileMetrics.churn || 0,
         hasCircularDependency: Boolean(fileMetrics.circularDependency),
-        riskScore: fileAnalysis.riskScore
+        riskScore: fileRiskResult.riskScore,
+        riskLevel: fileRiskResult.riskLevel
     };
 }
 
@@ -143,15 +154,7 @@ export async function analyzeFileRisk(repoPath: string, filePath: string): Promi
 export async function computeFileImpact(repoPath: string, filePath: string): Promise<FileImpactResult> {
     const structuredDependenciesData = parseRepository(repoPath);
     const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
-    const directDependents = dependencyGraph.getDirectDependent(filePath);
-    const transitiveDependents = dependencyGraph.getTransitiveDependents(filePath);
-    return {
-        file: filePath,
-        directDependents,
-        transitiveDependents,
-        totalImpactCount: transitiveDependents.length,
-        impactRatio: transitiveDependents.length / dependencyGraph.getNodes().size
-    };
+    return computeImpact(dependencyGraph, filePath);
 }
 
 // Cycles
@@ -177,25 +180,6 @@ export async function ask(question: string, repoPath: string): Promise<string> {
 ///////////////////////////////////////////////////////////////////////////////
 // Repository Initialization
 
-/**
- * Options for initializing a repository
- */
-export interface InitRepoOptions {
-  storageType: StorageType;
-  storagePath: string;
-  repoId?: string;
-}
-
-/**
- * Result of initializing a repository
- */
-export interface InitRepoResult {
-  success: boolean;
-  repoId: string;
-  config: RepoStemConfig;
-  migrationResult: MigrationResult;
-  message: string;
-}
 
 /**
  * Initialize a repository for persistence

@@ -1,3 +1,5 @@
+import { MigrationResult } from "./persistence";
+
 export interface ParsedFile {
     path: string;
     syntax: ParsedSyntax;
@@ -59,7 +61,8 @@ export interface MetricContext {
 export interface FileAnalysis {
     file: string;
     riskScore: number;
-    metrics: Record<string, number>;
+    riskLevel: MetricClassification;
+    metrics: FileMetrics;
 }
 
 export interface RankedFile {
@@ -78,11 +81,8 @@ export interface ProjectAnalysisResult {
 
 export interface FileRiskResult {
   file: string;
-  centrality: number;
-  coupling: number;
-  churn: number;
-  hasCircularDependency: boolean;
   riskScore: number;
+  riskLevel: MetricClassification;
 }
 
 export interface FileImpactResult {
@@ -124,4 +124,39 @@ export interface MetricConfig {
     extractValue: (fileAnalysis: FileAnalysis, metrics: any) => number;
     threshold?: number;
     sortDescending?: boolean;
+}
+
+export interface FileMetrics {
+    centrality: number;
+    coupling: number;
+    churn: number;
+    circularDependency: number;
+    [key: string]: number;
+}
+
+export interface FileRiskAnalysisResult {
+    file: string;
+    riskScore: number;
+    riskLevel: MetricClassification;
+    centrality: number;
+    coupling: number;
+    churn: number;
+    hasCircularDependency: boolean;
+}
+
+export interface InitRepoOptions {
+  storageType: StorageType;
+  storagePath: string;
+  repoId?: string;
+}
+
+/**
+ * Result of initializing a repository
+ */
+export interface InitRepoResult {
+  success: boolean;
+  repoId: string;
+  config: RepoStemConfig;
+  migrationResult: MigrationResult;
+  message: string;
 }

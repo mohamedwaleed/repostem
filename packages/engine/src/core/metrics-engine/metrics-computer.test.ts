@@ -25,7 +25,9 @@ const createMockGraph = (
     detectCycles: () => cycles,
     getNodes: () => nodes,
     getEdges: () => new Map(),
-    getRepositoryRoot: () => "/test/repo"
+    getRepositoryRoot: () => "/test/repo",
+    getDirectDependent: () => [],
+    getTransitiveDependents: () => []
 });
 
 describe('MetricsComputer', () => {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { detectIntent, explainRiskIntent, explainImpactIntent } from './intent-router';
 import { explainRisk, explainImpact } from './explainer';
-import { FileAnalysis, FileImpactResult } from '../types';
+import { FileAnalysis, FileImpactResult, MetricClassification } from '../types';
 
 // Mock the explainer functions
 vi.mock('./explainer', () => ({
@@ -112,7 +112,8 @@ describe('explainRiskIntent', () => {
     const mockData: FileAnalysis = {
       file: 'test.ts',
       riskScore: 0.5,
-      metrics: { centrality: 0.3, coupling: 0.4, churn: 0.2 }
+      riskLevel: MetricClassification.MEDIUM,
+      metrics: { centrality: 0.3, coupling: 0.4, churn: 0.2, circularDependency: 0.1 }
     };
     
     vi.mocked(explainRisk).mockResolvedValue('Risk explanation');
@@ -127,7 +128,8 @@ describe('explainRiskIntent', () => {
     const mockData: FileAnalysis = {
       file: 'test.ts',
       riskScore: 0.7,
-      metrics: { centrality: 0.5, coupling: 0.6, churn: 0.3 }
+      riskLevel: MetricClassification.HIGH,
+      metrics: { centrality: 0.5, coupling: 0.6, churn: 0.3, circularDependency: 0.1 }
     };
     
     vi.mocked(explainRisk).mockResolvedValue('High risk explanation');

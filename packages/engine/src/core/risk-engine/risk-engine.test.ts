@@ -16,13 +16,9 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
 
             expect(result).toHaveLength(1);
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBe(0);
-            expect(result[0].metrics).toEqual({
-                centrality: 0,
-                coupling: 0,
-                circularDependency: 0,
-                churn: 0,
-            });
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should compute risk for a single file with all maximum metrics', () => {
@@ -38,13 +34,9 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
 
             expect(result).toHaveLength(1);
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBe(1);
-            expect(result[0].metrics).toEqual({
-                centrality: 1,
-                coupling: 1,
-                circularDependency: 1,
-                churn: 1,
-            });
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should apply correct weights to metrics (0.3, 0.25, 0.25, 0.2)', () => {
@@ -58,7 +50,9 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBe(0.3);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should calculate weighted risk correctly for coupling only', () => {
@@ -72,7 +66,9 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBe(0.25);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should calculate weighted risk correctly for circular dependency only', () => {
@@ -86,7 +82,9 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBe(0.25);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should calculate weighted risk correctly for churn only', () => {
@@ -100,7 +98,9 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBe(0.2);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should compute risk for multiple files', () => {
@@ -130,15 +130,18 @@ describe('Risk Engine', () => {
             expect(result).toHaveLength(3);
             
             const file1Risk = 0.3 * 0.8 + 0.25 * 0.6 + 0.25 * 0 + 0.2 * 0.4;
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBeCloseTo(file1Risk, 10);
-            expect(result[0].metrics).toEqual(fileMetrics.get('file1.ts'));
+            expect(result[0].riskLevel).toBeDefined();
 
             const file2Risk = 0.3 * 0.2 + 0.25 * 0.3 + 0.25 * 1 + 0.2 * 0.1;
+            expect(result[1].file).toBe('file2.ts');
             expect(result[1].riskScore).toBeCloseTo(file2Risk, 10);
-            expect(result[1].metrics).toEqual(fileMetrics.get('file2.ts'));
+            expect(result[1].riskLevel).toBeDefined();
 
+            expect(result[2].file).toBe('file3.ts');
             expect(result[2].riskScore).toBe(0);
-            expect(result[2].metrics).toEqual(fileMetrics.get('file3.ts'));
+            expect(result[2].riskLevel).toBeDefined();
         });
 
         it('should handle fractional metric values correctly', () => {
@@ -153,8 +156,10 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             const expectedRisk = 0.3 * 0.5 + 0.25 * 0.5 + 0.25 * 0.5 + 0.2 * 0.5;
+            expect(result[0].file).toBe('file1.ts');
             expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
             expect(result[0].riskScore).toBe(0.5);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should preserve metric precision in output', () => {
@@ -168,11 +173,9 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
-            
-            expect(result[0].metrics.centrality).toBe(0.123456789);
-            expect(result[0].metrics.coupling).toBe(0.987654321);
-            expect(result[0].metrics.circularDependency).toBe(0.555555555);
-            expect(result[0].metrics.churn).toBe(0.111111111);
+            expect(result[0].file).toBe('file1.ts');
+            expect(result[0].riskScore).toBeDefined();
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should return empty array for empty input', () => {
@@ -192,8 +195,10 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('central-file.ts');
             const expectedRisk = 0.3 * 1 + 0.25 * 0.1 + 0.25 * 0 + 0.2 * 0.05;
             expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should handle files with high churn but low structural metrics', () => {
@@ -207,8 +212,10 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('volatile-file.ts');
             const expectedRisk = 0.3 * 0.1 + 0.25 * 0.1 + 0.25 * 0 + 0.2 * 1;
             expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should handle files in circular dependencies with moderate other metrics', () => {
@@ -222,8 +229,10 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('circular-file.ts');
             const expectedRisk = 0.3 * 0.5 + 0.25 * 0.6 + 0.25 * 1 + 0.2 * 0.3;
             expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should maintain file order from input map', () => {
@@ -236,9 +245,9 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
             
             expect(result).toHaveLength(3);
-            expect(result[0].metrics).toEqual(fileMetrics.get('alpha.ts'));
-            expect(result[1].metrics).toEqual(fileMetrics.get('beta.ts'));
-            expect(result[2].metrics).toEqual(fileMetrics.get('gamma.ts'));
+            expect(result[0].file).toBe('alpha.ts');
+            expect(result[1].file).toBe('beta.ts');
+            expect(result[2].file).toBe('gamma.ts');
         });
 
         it('should handle additional metrics beyond the four weighted ones', () => {
@@ -255,10 +264,10 @@ describe('Risk Engine', () => {
 
             const result = computeRisk(fileMetrics);
             
+            expect(result[0].file).toBe('file1.ts');
             const expectedRisk = 0.3 * 0.5 + 0.25 * 0.5 + 0.25 * 0.5 + 0.2 * 0.5;
             expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
-            expect(result[0].metrics.extraMetric).toBe(0.9);
-            expect(result[0].metrics.anotherMetric).toBe(1.0);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should compute correct risk for realistic scenario', () => {
@@ -286,13 +295,15 @@ describe('Risk Engine', () => {
             const result = computeRisk(fileMetrics);
 
             expect(result).toHaveLength(3);
-            
+            expect(result[0].file).toBe('src/utils/helper.ts');
             const helperRisk = 0.3 * 0.75 + 0.25 * 0.6 + 0.25 * 0 + 0.2 * 0.3;
             expect(result[0].riskScore).toBeCloseTo(helperRisk, 10);
 
+            expect(result[1].file).toBe('src/components/Button.tsx');
             const buttonRisk = 0.3 * 0.2 + 0.25 * 0.4 + 0.25 * 0 + 0.2 * 0.8;
             expect(result[1].riskScore).toBeCloseTo(buttonRisk, 10);
 
+            expect(result[2].file).toBe('src/services/api.ts');
             const apiRisk = 0.3 * 0.9 + 0.25 * 0.85 + 0.25 * 1 + 0.2 * 0.5;
             expect(result[2].riskScore).toBeCloseTo(apiRisk, 10);
             expect(result[2].riskScore).toBeGreaterThan(result[0].riskScore);
@@ -316,10 +327,12 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('file1.ts');
             const expectedRisk = 0.3 * 0.0001 + 0.25 * 0.0002 + 0.25 * 0 + 0.2 * 0.0003;
             expect(result[0].riskScore).toBeCloseTo(expectedRisk, 10);
             expect(result[0].riskScore).toBeGreaterThan(0);
             expect(result[0].riskScore).toBeLessThan(0.001);
+            expect(result[0].riskLevel).toBeDefined();
         });
 
         it('should handle files with values at boundaries (0 and 1)', () => {
@@ -333,9 +346,11 @@ describe('Risk Engine', () => {
             ]);
 
             const result = computeRisk(fileMetrics);
+            expect(result[0].file).toBe('boundary-file.ts');
             const expectedRisk = 0.3 * 1 + 0.25 * 0 + 0.25 * 1 + 0.2 * 0;
             expect(result[0].riskScore).toBe(expectedRisk);
             expect(result[0].riskScore).toBe(0.55);
+            expect(result[0].riskLevel).toBeDefined();
         });
     });
 });
