@@ -33,5 +33,7 @@ export {
 
 export {
   RepoRepository,
-  RepoRecord
+  RepoRecord,
+  SnapshotRepository,
+  SnapshotRecord
 } from './persistence/repositories';

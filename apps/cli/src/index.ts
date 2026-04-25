@@ -5,6 +5,7 @@ import analyzeCommand from "./commands/analyze";
 import riskCommand from "./commands/risk";
 import askCommand from "./commands/ask";
 import cyclesCommand from "./commands/cycles";
+import historyCommand from "./commands/history";
 import impactCommand from "./commands/impact";
 import initCommand from "./commands/init";
 import { readFileSync } from "fs";
@@ -27,5 +28,6 @@ program.addCommand(riskCommand);
 program.addCommand(impactCommand);
 program.addCommand(askCommand);
 program.addCommand(cyclesCommand);
+program.addCommand(historyCommand);
 
 program.parse();
