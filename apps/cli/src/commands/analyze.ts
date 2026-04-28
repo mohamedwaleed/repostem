@@ -10,5 +10,14 @@ export default new Command()
   .action(async (options: { repo?: string; output?: string }) => {
     const result = await analyzeRepository(options.repo || process.cwd());
     const format = parseOutputFormat(options.output);
-    outputProjectAnalysis(result, format);
+    
+    if (result.warning) {
+      console.warn(`\n⚠️  Warning: ${result.warning}\n`);
+    }
+    
+    outputProjectAnalysis(result.analysis, format);
+    
+    if (result.persisted) {
+      console.log(`\n✓ Snapshot persisted (ID: ${result.snapshotId})\n`);
+    }
   });

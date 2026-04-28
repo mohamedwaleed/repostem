@@ -160,3 +160,38 @@ export interface InitRepoResult {
   migrationResult: MigrationResult;
   message: string;
 }
+
+export interface SnapshotMetadata {
+    branch: string | null;
+    commitHash: string | null;
+    dirty: boolean;
+    createdAt: Date;
+}
+
+export interface SnapshotSummary {
+    totalFiles: number;
+    totalDependencies: number;
+    cycleCount: number;
+}
+
+export interface FileSnapshot {
+    path: string;
+    metrics: FileMetrics;
+    riskScore: number;
+    riskLevel: MetricClassification;
+}
+
+export interface SnapshotAggregate {
+    metadata: SnapshotMetadata;
+    summary: SnapshotSummary;
+    files: Map<string, FileSnapshot>;
+    edges: Map<string, Set<string>>;
+    cycles: Cycle[];
+}
+
+export interface AnalyzeRepositoryResult {
+  analysis: ProjectAnalysisResult;
+  snapshotId?: string;
+  persisted: boolean;
+  warning?: string;
+}
