@@ -1,6 +1,5 @@
-import { classify } from "../../engine";
+import { classify } from "../../utils/classify";
 import { FileMetrics, FileRiskResult } from "../../types";
-import IGraph from "../dependency-graph/graph-implementations/graph-interface";
 
 const WEIGHTS = {
     centrality: 0.3,

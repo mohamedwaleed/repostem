@@ -1,14 +1,25 @@
+// Application layer exports
 export {
     analyzeRepository,
     analyzeFileRisk,
     computeFileImpact,
     detectRepositoryCycles,
     ask,
-    classify,
     initializeRepo,
     isRepoInitialized,
-    resetPersistence
-} from './engine';
+    resetPersistence,
+    explainFileRisk,
+    explainFileImpact,
+    detectDrift,
+    DriftResult,
+    getSnapshotHistory,
+    getFileHistory,
+    SnapshotHistoryItem,
+    FileHistoryItem
+} from './application';
+
+// Utilities
+export { classify } from './utils/classify';
 
 export { getMetricLabel, METRIC_LABELS } from './metric-labels';
 

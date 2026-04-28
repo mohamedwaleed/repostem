@@ -1,5 +1,5 @@
 import { isNumber } from "lodash";
-import { classify } from "../../engine";
+import { classify } from "../../utils/classify";
 import { getMetricLabel } from "../../metric-labels";
 import { FileAnalysis } from "../../types";
 

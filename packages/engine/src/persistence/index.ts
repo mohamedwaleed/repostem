@@ -25,3 +25,6 @@ export {
   CreateCycleData,
   ParsedCycle,
 } from './repositories';
+
+// Snapshot persister
+export { persistSnapshot, tryPersistSnapshot, PersistResult } from './snapshot-persister';
