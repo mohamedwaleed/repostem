@@ -14,35 +14,27 @@ import {
 } from "../types";
 
 async function explainFileRisk(repoPath: string, filePath: string, useAI: boolean = true): Promise<string> {
-  const structuredDependenciesData = parseRepository(repoPath);
-  const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
+  const snapshot = await buildSnapshot(repoPath);
   
-  if (!dependencyGraph.getNode(filePath)) {
-    throw new Error(`File ${filePath} not found in metrics`);
+  const fileSnapshot = snapshot.files.get(filePath);
+  if (!fileSnapshot) {
+    throw new Error(`File ${filePath} not found in snapshot`);
   }
   
-  const fileMetrics = await computeFileMetrics(dependencyGraph, filePath);
-  const fileRiskResult = computeFileRisk(filePath, fileMetrics);
   const fileAnalysis = {
     file: filePath,
-    metrics: fileMetrics,
-    riskScore: fileRiskResult.riskScore,
-    riskLevel: fileRiskResult.riskLevel
+    metrics: fileSnapshot.metrics,
+    riskScore: fileSnapshot.riskScore,
+    riskLevel: fileSnapshot.riskLevel
   };
   
   if (useAI) {
     return await explainRiskIntent(fileAnalysis);
   }
-  return `The file ${filePath} has a risk score of ${fileAnalysis.riskScore}. It has a centrality of ${fileMetrics.centrality}, a coupling of ${fileMetrics.coupling}, and a churn of ${fileMetrics.churn}.`;
+  return `The file ${filePath} has a risk score of ${fileAnalysis.riskScore}. It has a centrality of ${fileAnalysis.metrics.centrality}, a coupling of ${fileAnalysis.metrics.coupling}, and a churn of ${fileAnalysis.metrics.churn}.`;
 }
 
 async function explainFileImpact(repoPath: string, filePath: string, useAI: boolean = true): Promise<string> {
-  const structuredDependenciesData = parseRepository(repoPath);
-  const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
-  
-  if (!dependencyGraph.getNode(filePath)) {
-    throw new Error(`File ${filePath} not found in metrics`);
-  }
   
   const fileImpact = await computeFileImpact(repoPath, filePath);
   
@@ -70,24 +62,21 @@ export async function analyzeRepository(repoPath: string): Promise<AnalyzeReposi
  * Analyze risk for a specific file
  */
 export async function analyzeFileRisk(repoPath: string, filePath: string): Promise<FileRiskAnalysisResult> {
-  const structuredDependenciesData = parseRepository(repoPath);
-  const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
+  const snapshot = await buildSnapshot(repoPath);
   
-  if (!dependencyGraph.getNode(filePath)) {
-    throw new Error(`File ${filePath} not found in metrics`);
+  const fileSnapshot = snapshot.files.get(filePath);
+  if (!fileSnapshot) {
+    throw new Error(`File ${filePath} not found in snapshot`);
   }
-  
-  const fileMetrics = await computeFileMetrics(dependencyGraph, filePath);
-  const fileRiskResult = computeFileRisk(filePath, fileMetrics);
   
   return {
     file: filePath,
-    centrality: fileMetrics.centrality || 0,
-    coupling: fileMetrics.coupling || 0,
-    churn: fileMetrics.churn || 0,
-    hasCircularDependency: Boolean(fileMetrics.circularDependency),
-    riskScore: fileRiskResult.riskScore,
-    riskLevel: fileRiskResult.riskLevel
+    centrality: fileSnapshot.metrics.centrality || 0,
+    coupling: fileSnapshot.metrics.coupling || 0,
+    churn: fileSnapshot.metrics.churn || 0,
+    hasCircularDependency: Boolean(fileSnapshot.metrics.circularDependency),
+    riskScore: fileSnapshot.riskScore,
+    riskLevel: fileSnapshot.riskLevel
   };
 }
 
@@ -97,6 +86,9 @@ export async function analyzeFileRisk(repoPath: string, filePath: string): Promi
 export async function computeFileImpact(repoPath: string, filePath: string): Promise<FileImpactResult> {
   const structuredDependenciesData = parseRepository(repoPath);
   const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
+  if (!dependencyGraph.getNode(filePath)) {
+    throw new Error(`File ${filePath} not found in metrics`);
+  }
   return computeImpact(dependencyGraph, filePath);
 }
 
@@ -104,9 +96,8 @@ export async function computeFileImpact(repoPath: string, filePath: string): Pro
  * Detect cycles in the repository
  */
 export async function detectRepositoryCycles(repoPath: string): Promise<Cycle[]> {
-  const structuredDependenciesData = parseRepository(repoPath);
-  const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
-  return dependencyGraph.detectCycles();
+  const snapshot = await buildSnapshot(repoPath);
+  return snapshot.cycles;
 }
 
 export { explainFileRisk, explainFileImpact };

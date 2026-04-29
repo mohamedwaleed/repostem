@@ -53,6 +53,29 @@ vi.mock('../core/impact-engine/impact-engine', () => ({
     }))
 }));
 
+// Mock snapshot builder
+vi.mock('../core/snapshot-builder', () => ({
+    buildSnapshot: vi.fn().mockResolvedValue({
+        metadata: {
+            branch: 'main',
+            commitHash: 'abc123',
+            dirty: false,
+            createdAt: new Date()
+        },
+        summary: {
+            totalFiles: 2,
+            totalDependencies: 1,
+            cycleCount: 0
+        },
+        files: new Map([
+            ['src/index.ts', { path: 'src/index.ts', metrics: { centrality: 0.5, coupling: 0.3, churn: 0.2 }, riskScore: 0.35, riskLevel: 'medium' }],
+            ['src/utils/helper.ts', { path: 'src/utils/helper.ts', metrics: { centrality: 0.8, coupling: 0.4, churn: 0.1 }, riskScore: 0.28, riskLevel: 'low' }]
+        ]),
+        edges: new Map([['src/index.ts', new Set(['src/utils/helper.ts'])]]),
+        cycles: []
+    })
+}));
+
 // Mock AI explanation layer
 vi.mock('../ai-explanation-layer/intent-router', () => ({
     detectIntent: vi.fn((question: string) => {
