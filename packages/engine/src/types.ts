@@ -195,3 +195,21 @@ export interface AnalyzeRepositoryResult {
   persisted: boolean;
   warning?: string;
 }
+
+export interface SnapshotHistoryRecord {
+  id: string;
+  repo_id: string;
+  git_remote_url: string | null;
+  branch: string | null;
+  commit_hash: string | null;
+  working_tree_dirty: boolean;
+  total_files: number | null;
+  cycle_count: number | null;
+  created_at: Date;
+}
+
+export interface HistoryOptions {
+  repo?: string;
+  branch?: string;
+  noBranchFilter?: boolean;
+}

@@ -13,9 +13,6 @@ export {
     detectDrift,
     DriftResult,
     getSnapshotHistory,
-    getFileHistory,
-    SnapshotHistoryItem,
-    FileHistoryItem
 } from './application';
 
 // Utilities

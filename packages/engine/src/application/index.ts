@@ -17,9 +17,6 @@ export { detectDrift, DriftResult } from './drift-service';
 // History Service
 export { 
   getSnapshotHistory, 
-  getFileHistory, 
-  SnapshotHistoryItem, 
-  FileHistoryItem 
 } from './history-service';
 
 // Init Service
