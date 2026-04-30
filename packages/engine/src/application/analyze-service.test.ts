@@ -94,7 +94,10 @@ vi.mock('../core/snapshot-builder', () => ({
         ]),
         edges: new Map([['src/index.ts', new Set(['src/utils/helper.ts'])]]),
         cycles: []
-    }),
+    })
+}));
+
+vi.mock('../repository-metrics/snapshot-summary', () => ({
     buildSnapshotSummary: vi.fn(() => ({
         totalFiles: 2,
         totalDependencies: 1,

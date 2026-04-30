@@ -1,12 +1,10 @@
-import { SnapshotAggregate, FileSnapshot, FileMetrics, ProjectAnalysisResult } from "../types";
+import { SnapshotAggregate, FileSnapshot, FileMetrics } from "../types";
 import parseRepository from "./parser/parser";
 import { buildDependencyGraph } from "./dependency-graph/dependency-graph";
 import { computeMetrics } from "./metrics-engine/metrics-engine";
 import { computeRisk } from "./risk-engine/risk-engine";
 import { detectBranch, detectCommitHash, detectDirtyState } from "../utils/git";
 import IGraph from "./dependency-graph/graph-implementations/graph-interface";
-import { rankBy } from "../utils/common";
-
 export async function buildSnapshot(repoPath: string): Promise<SnapshotAggregate> {
     const structuredDependenciesData = parseRepository(repoPath);
     const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
@@ -49,21 +47,4 @@ function buildFileSnapshots(dependencyGraph: IGraph, fileMetrics: Map<string, Fi
     }
     
     return snapshots;
-}
-
-export function buildSnapshotSummary(
-  snapshot: SnapshotAggregate
-): ProjectAnalysisResult {
-  const files = Array.from(snapshot.files.values());
-  const rankFiles = (selector: (file: FileSnapshot) => number) => 
-    rankBy(files, selector, 5).map(f => ({ file: f.path, score: selector(f) }));
-
-  return {
-    totalFiles: snapshot.files.size,
-    totalDependencies: snapshot.edges.size,
-    cycleCount: snapshot.cycles.length,
-    topCentralFiles: rankFiles(f => f.metrics.centrality),
-    highChurnFiles: rankFiles(f => f.metrics.churn),
-    topRiskFiles: rankFiles(f => f.riskScore)
-  };
 }

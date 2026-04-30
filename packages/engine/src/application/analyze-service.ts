@@ -3,7 +3,8 @@ import { buildDependencyGraph } from "../core/dependency-graph/dependency-graph"
 import { computeFileMetrics } from "../core/metrics-engine/metrics-engine";
 import { computeFileRisk } from "../core/risk-engine/risk-engine";
 import { computeImpact } from "../core/impact-engine/impact-engine";
-import { buildSnapshot, buildSnapshotSummary } from "../core/snapshot-builder";
+import { buildSnapshot } from "../core/snapshot-builder";
+import { buildSnapshotSummary } from "../repository-metrics/snapshot-summary";
 import { tryPersistSnapshot } from "../persistence/snapshot-persister";
 import { explainImpactIntent, explainRiskIntent } from "../ai-explanation-layer/intent-router";
 import { 
