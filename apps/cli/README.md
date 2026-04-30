@@ -72,6 +72,18 @@ repostem cycles
 repostem cycles -r /path/to/repo
 ```
 
+### View Snapshot History
+```bash
+# Show persisted analysis history for the current repository
+repostem history
+
+# History for a specific branch
+repostem history -b main
+
+# History with JSON output
+repostem history -o json
+```
+
 ### Ask AI Questions
 ```bash
 # Get AI explanations about structural metrics
@@ -112,6 +124,8 @@ repostem init --storage postgresql --db-path postgresql://user:pass@localhost/db
 
 ### `analyze`
 Run full structural analysis on the repository and print project-level structural summary.
+
+If the repository has been initialized with `repostem init`, the analysis snapshot will be automatically persisted to the configured storage.
 
 ```bash
 repostem analyze [options]
@@ -178,6 +192,26 @@ repostem cycles [options]
 **Example:**
 ```bash
 repostem cycles -r ./my-project -o json
+```
+
+### `history`
+Display persisted snapshot history for the current repository. Requires the repository to be initialized with `repostem init`.
+
+```bash
+repostem history [options]
+```
+
+**Options:**
+- `-r, --repo <path>`: Path to repository (default: current directory)
+- `-b, --branch <name>`: Filter by branch (defaults to the current Git branch when in a Git repo)
+- `--no-branch-filter`: Show snapshots from every branch (overrides branch detection)
+- `-o, --output <format>`: Output format - `text`, `json`, `table` (default: `table`)
+
+**Example:**
+```bash
+repostem history
+repostem history -b main -o json
+repostem history --no-branch-filter
 ```
 
 ### `ask`
