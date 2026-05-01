@@ -5,11 +5,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc && npm run copy-schema",
-    "copy-schema": "cp -r src/persistence/schema/*.sql dist/persistence/schema/ 2>/dev/null || mkdir -p dist/persistence/schema && cp -r src/persistence/schema/*.sql dist/persistence/schema/",
+    "build": "tsc && npm run copy-migrations",
+    "copy-migrations": "mkdir -p dist/persistence/migrations && cp -r src/persistence/migrations/*.ts dist/persistence/migrations/ 2>/dev/null || true",
     "dev": "tsc --watch",
     "test": "vitest run --config vitest.config.ts",
-    "test:watch": "vitest --config vitest.config.ts"
+    "test:watch": "vitest --config vitest.config.ts",
+    "migrate:latest": "knex migrate:latest --knexfile knexfile.ts",
+    "migrate:rollback": "knex migrate:rollback --knexfile knexfile.ts",
+    "migrate:status": "knex migrate:status --knexfile knexfile.ts"
   },
   "dependencies": {
     "@types/lodash": "^4.17.24",

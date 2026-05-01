@@ -1,24 +1,8 @@
-// Drift detection service
-// TODO: Implement drift comparison between snapshots
-
-export interface DriftResult {
-  previousSnapshotId: string;
-  currentSnapshotId: string;
-  filesAdded: string[];
-  filesRemoved: string[];
-  filesWithRiskChange: {
-    file: string;
-    previousRisk: number;
-    currentRisk: number;
-    delta: number;
-  }[];
-  newCycles: string[][];
-  resolvedCycles: string[][];
-}
+import { SnapshotAggregate } from '../types';
 
 /**
  * Compare the two most recent snapshots to detect architectural drift
  */
-export async function detectDrift(_repoPath: string): Promise<DriftResult | null> {
+export async function detectDrift(_repoPath: string): Promise<SnapshotAggregate | null> {
   throw new Error("Not implemented");
 }

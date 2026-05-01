@@ -12,7 +12,8 @@ export {
 export { ask } from './ask-service';
 
 // Drift Service
-export { detectDrift, DriftResult } from './drift-service';
+export { detectDrift } from './drift-service';
+export { DriftResult } from '../types';
 
 // History Service
 export { 

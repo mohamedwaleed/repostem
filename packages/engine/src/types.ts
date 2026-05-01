@@ -1,4 +1,4 @@
-import { MigrationResult } from "./persistence";
+import { KnexMigrationResult } from "./persistence";
 
 export interface ParsedFile {
     path: string;
@@ -157,7 +157,7 @@ export interface InitRepoResult {
   success: boolean;
   repoId: string;
   config: RepoStemConfig;
-  migrationResult: MigrationResult;
+  migrationResult: KnexMigrationResult;
   message: string;
 }
 
@@ -182,6 +182,7 @@ export interface FileSnapshot {
 }
 
 export interface SnapshotAggregate {
+    repositoryRoot: string;
     metadata: SnapshotMetadata;
     summary: SnapshotSummary;
     files: Map<string, FileSnapshot>;
@@ -212,4 +213,52 @@ export interface HistoryOptions {
   repo?: string;
   branch?: string;
   noBranchFilter?: boolean;
+}
+
+
+export interface DriftResult {
+  previousSnapshot: DriftSnapshotInfo;
+  currentSnapshot: DriftSnapshotInfo;
+  riskChanges: {
+    increasedCount: number;
+    decreasedCount: number;
+    items: RiskChangeItem[];
+  };
+  impactChanges: {
+    increasedCount: number;
+    items: ImpactChangeItem[];
+  };
+  dependencyChanges: DependencyChangeSummary;
+  cycleChanges: CycleChangeSummary;
+  complexityScore: number;
+}
+
+export interface DriftSnapshotInfo {
+  commitHash: string | null;
+  dirty: boolean;
+  date: Date;
+}
+
+export interface RiskChangeItem {
+  file: string;
+  previousRisk: number;
+  currentRisk: number;
+  delta: number;
+}
+
+export interface ImpactChangeItem {
+  file: string;
+  previousImpactRatio: number;
+  currentImpactRatio: number;
+  delta: number;
+}
+
+export interface DependencyChangeSummary {
+  newEdges: number;
+  removedEdges: number;
+}
+
+export interface CycleChangeSummary {
+  newCycles: Cycle[];
+  resolvedCycles: Cycle[];
 }

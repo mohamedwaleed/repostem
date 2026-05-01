@@ -93,6 +93,7 @@ export async function persistSnapshot(
   await snapshotRepository.createSnapshot({
     id: snapshotId,
     repoId,
+    repositoryRoot: snapshot.repositoryRoot,
     branch: snapshot.metadata.branch,
     commitHash: snapshot.metadata.commitHash,
     workingTreeDirty: snapshot.metadata.dirty,

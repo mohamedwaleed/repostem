@@ -45,3 +45,10 @@ export {
   SnapshotRepository,
   SnapshotRecord
 } from './persistence/repositories';
+
+export {
+  runKnexMigrations,
+  getMigrationStatus,
+  rollbackMigrations,
+  KnexMigrationResult
+} from './persistence/knex-migration-runner';

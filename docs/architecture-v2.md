@@ -284,7 +284,17 @@ New Cycle (3 files):
   - ui/src/ui/app-render.ts
 
 ----------------------------------------
+Hotspot Changes:
 
+New Hotspots:
++ ui/src/ui/app-render.ts
+  Score: 0.41 → 0.33 (-0.08)
+
+Resolved Hotspots:
+- src/api/router.ts
+  Score: 0.29 → 0.38 (+0.09)
+
+----------------------------------------
 Summary:
 Architectural complexity is increasing.
 Risk and blast radius are growing in the UI layer.

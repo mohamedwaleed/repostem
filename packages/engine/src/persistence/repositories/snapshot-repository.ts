@@ -7,6 +7,7 @@ import { DatabaseAdapter } from '../adapters';
 export interface SnapshotRecord {
   id: string;
   repo_id: string;
+  repository_root: string | null;
   git_remote_url: string | null;
   branch: string | null;
   commit_hash: string | null;
@@ -22,6 +23,7 @@ export interface SnapshotRecord {
 export interface CreateSnapshotData {
   id: string;
   repoId: string;
+  repositoryRoot?: string | null;
   gitRemoteUrl?: string | null;
   branch?: string | null;
   commitHash?: string | null;
@@ -50,6 +52,7 @@ export class SnapshotRepository {
     const record: SnapshotRecord = {
       id: data.id,
       repo_id: data.repoId,
+      repository_root: data.repositoryRoot || null,
       git_remote_url: data.gitRemoteUrl || null,
       branch: data.branch || null,
       commit_hash: data.commitHash || null,
@@ -62,6 +65,7 @@ export class SnapshotRepository {
     await this.knex(SnapshotRepository.TABLE_NAME).insert({
       id: record.id,
       repo_id: record.repo_id,
+      repository_root: record.repository_root,
       git_remote_url: record.git_remote_url,
       branch: record.branch,
       commit_hash: record.commit_hash,
