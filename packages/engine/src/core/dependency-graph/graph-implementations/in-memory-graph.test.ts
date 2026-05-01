@@ -760,3 +760,395 @@ describe('InMemoryGraph - getTransitiveDependents', () => {
         });
     });
 });
+
+describe('InMemoryGraph - getTotalEdgeCount', () => {
+    let graph: InMemoryGraph;
+
+    beforeEach(() => {
+        graph = new InMemoryGraph();
+    });
+
+    const createMockFile = (path: string): ParsedFile => ({
+        path,
+        syntax: { imports: [] },
+        metadata: { size: 0, extension: '.ts' }
+    });
+
+    describe('Basic functionality', () => {
+        it('should return 0 for empty graph', () => {
+            expect(graph.getTotalEdgeCount()).toBe(0);
+        });
+
+        it('should return 0 for graph with nodes but no edges', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            expect(graph.getTotalEdgeCount()).toBe(0);
+        });
+
+        it('should return 1 for single edge', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            expect(graph.getTotalEdgeCount()).toBe(1);
+        });
+
+        it('should count multiple edges from same node', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('a.ts', 'c.ts');
+            expect(graph.getTotalEdgeCount()).toBe(2);
+        });
+
+        it('should handle duplicate edges correctly (deduplicated by Set)', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('a.ts', 'b.ts');
+            expect(graph.getTotalEdgeCount()).toBe(1);
+        });
+    });
+
+    describe('Complex scenarios', () => {
+        it('should count edges in linear chain', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            expect(graph.getTotalEdgeCount()).toBe(2);
+        });
+
+        it('should count edges in cycle', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            graph.addEdge('c.ts', 'a.ts');
+            expect(graph.getTotalEdgeCount()).toBe(3);
+        });
+
+        it('should count edges in fully connected graph', () => {
+            const nodes = ['a.ts', 'b.ts', 'c.ts'];
+            nodes.forEach(node => graph.addNode(createMockFile(node)));
+            
+            // Each node depends on every other node
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = 0; j < nodes.length; j++) {
+                    if (i !== j) {
+                        graph.addEdge(nodes[i], nodes[j]);
+                    }
+                }
+            }
+            
+            expect(graph.getTotalEdgeCount()).toBe(6); // 3 * 2 = 6
+        });
+
+        it('should count edges in tree structure', () => {
+            graph.addNode(createMockFile('root.ts'));
+            graph.addNode(createMockFile('child1.ts'));
+            graph.addNode(createMockFile('child2.ts'));
+            graph.addNode(createMockFile('grandchild1.ts'));
+            
+            graph.addEdge('root.ts', 'child1.ts');
+            graph.addEdge('root.ts', 'child2.ts');
+            graph.addEdge('child1.ts', 'grandchild1.ts');
+            
+            expect(graph.getTotalEdgeCount()).toBe(3);
+        });
+    });
+
+    describe('Large graphs', () => {
+        it('should handle large number of edges efficiently', () => {
+            const nodeCount = 100;
+            for (let i = 0; i < nodeCount; i++) {
+                graph.addNode(createMockFile(`node${i}.ts`));
+            }
+            
+            // Create edges: each node depends on the next
+            for (let i = 0; i < nodeCount - 1; i++) {
+                graph.addEdge(`node${i}.ts`, `node${i+1}.ts`);
+            }
+            
+            expect(graph.getTotalEdgeCount()).toBe(nodeCount - 1);
+        });
+    });
+});
+
+describe('InMemoryGraph - getNodesInCycles', () => {
+    let graph: InMemoryGraph;
+
+    beforeEach(() => {
+        graph = new InMemoryGraph();
+    });
+
+    const createMockFile = (path: string): ParsedFile => ({
+        path,
+        syntax: { imports: [] },
+        metadata: { size: 0, extension: '.ts' }
+    });
+
+    describe('Basic functionality', () => {
+        it('should return empty set for empty graph', () => {
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles).toBeInstanceOf(Set);
+            expect(nodesInCycles.size).toBe(0);
+        });
+
+        it('should return empty set for acyclic graph', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(0);
+        });
+
+        it('should identify node in self-loop', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addEdge('a.ts', 'a.ts');
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(1);
+            expect(nodesInCycles.has('a.ts')).toBe(true);
+        });
+
+        it('should identify nodes in 2-node cycle', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'a.ts');
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(2);
+            expect(nodesInCycles.has('a.ts')).toBe(true);
+            expect(nodesInCycles.has('b.ts')).toBe(true);
+        });
+
+        it('should identify nodes in 3-node cycle', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            graph.addEdge('c.ts', 'a.ts');
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(3);
+            expect(nodesInCycles.has('a.ts')).toBe(true);
+            expect(nodesInCycles.has('b.ts')).toBe(true);
+            expect(nodesInCycles.has('c.ts')).toBe(true);
+        });
+    });
+
+    describe('Multiple cycles', () => {
+        it('should identify nodes in multiple separate cycles', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addNode(createMockFile('d.ts'));
+            
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'a.ts');
+            graph.addEdge('c.ts', 'd.ts');
+            graph.addEdge('d.ts', 'c.ts');
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(4);
+            expect(nodesInCycles.has('a.ts')).toBe(true);
+            expect(nodesInCycles.has('b.ts')).toBe(true);
+            expect(nodesInCycles.has('c.ts')).toBe(true);
+            expect(nodesInCycles.has('d.ts')).toBe(true);
+        });
+
+        it('should handle overlapping cycles', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addNode(createMockFile('d.ts'));
+            
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            graph.addEdge('c.ts', 'a.ts');
+            graph.addEdge('a.ts', 'd.ts');
+            graph.addEdge('d.ts', 'a.ts');
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(4);
+        });
+    });
+
+    describe('Mixed scenarios', () => {
+        it('should only include nodes in cycles, not acyclic nodes', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addNode(createMockFile('d.ts'));
+            
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'a.ts');
+            graph.addEdge('c.ts', 'd.ts'); // acyclic
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(2);
+            expect(nodesInCycles.has('a.ts')).toBe(true);
+            expect(nodesInCycles.has('b.ts')).toBe(true);
+            expect(nodesInCycles.has('c.ts')).toBe(false);
+            expect(nodesInCycles.has('d.ts')).toBe(false);
+        });
+
+        it('should handle cycle with acyclic branch', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addNode(createMockFile('d.ts'));
+            
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            graph.addEdge('c.ts', 'a.ts');
+            graph.addEdge('b.ts', 'd.ts'); // acyclic branch
+            
+            const nodesInCycles = graph.getNodesInCycles();
+            expect(nodesInCycles.size).toBe(3);
+            expect(nodesInCycles.has('a.ts')).toBe(true);
+            expect(nodesInCycles.has('b.ts')).toBe(true);
+            expect(nodesInCycles.has('c.ts')).toBe(true);
+            expect(nodesInCycles.has('d.ts')).toBe(false);
+        });
+    });
+});
+
+describe('InMemoryGraph - getAverageConnectivity', () => {
+    let graph: InMemoryGraph;
+
+    beforeEach(() => {
+        graph = new InMemoryGraph();
+    });
+
+    const createMockFile = (path: string): ParsedFile => ({
+        path,
+        syntax: { imports: [] },
+        metadata: { size: 0, extension: '.ts' }
+    });
+
+    describe('Basic functionality', () => {
+        it('should return 0 for empty graph', () => {
+            expect(graph.getAverageConnectivity()).toBe(0);
+        });
+
+        it('should return 0 for single node', () => {
+            graph.addNode(createMockFile('a.ts'));
+            expect(graph.getAverageConnectivity()).toBe(0);
+        });
+
+        it('should return 0 for two nodes with no edges', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            expect(graph.getAverageConnectivity()).toBe(0);
+        });
+
+        it('should calculate connectivity for single edge', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            
+            // a: in=0, out=1 -> (0+1)/(2*1) = 0.5
+            // b: in=1, out=0 -> (1+0)/(2*1) = 0.5
+            // avg = (0.5 + 0.5) / 2 = 0.5
+            expect(graph.getAverageConnectivity()).toBeCloseTo(0.5, 10);
+        });
+
+        it('should calculate connectivity for bidirectional edge', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'a.ts');
+            
+            // a: in=1, out=1 -> (1+1)/(2*1) = 1.0
+            // b: in=1, out=1 -> (1+1)/(2*1) = 1.0
+            // avg = (1.0 + 1.0) / 2 = 1.0
+            expect(graph.getAverageConnectivity()).toBeCloseTo(1.0, 10);
+        });
+    });
+
+    describe('Complex scenarios', () => {
+        it('should calculate connectivity for linear chain', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            
+            // a: in=0, out=1 -> (0+1)/(2*2) = 0.25
+            // b: in=1, out=1 -> (1+1)/(2*2) = 0.5
+            // c: in=1, out=0 -> (1+0)/(2*2) = 0.25
+            // avg = (0.25 + 0.5 + 0.25) / 3 = 0.333
+            const result = graph.getAverageConnectivity();
+            expect(result).toBeCloseTo(1/3, 10);
+        });
+
+        it('should calculate connectivity for fully connected graph', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('c.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            graph.addEdge('a.ts', 'c.ts');
+            graph.addEdge('b.ts', 'a.ts');
+            graph.addEdge('b.ts', 'c.ts');
+            graph.addEdge('c.ts', 'a.ts');
+            graph.addEdge('c.ts', 'b.ts');
+            
+            // Each node has in=2, out=2 -> (2+2)/(2*2) = 1.0
+            expect(graph.getAverageConnectivity()).toBeCloseTo(1.0, 10);
+        });
+
+        it('should calculate connectivity for star pattern', () => {
+            graph.addNode(createMockFile('hub.ts'));
+            graph.addNode(createMockFile('spoke1.ts'));
+            graph.addNode(createMockFile('spoke2.ts'));
+            graph.addNode(createMockFile('spoke3.ts'));
+            
+            graph.addEdge('spoke1.ts', 'hub.ts');
+            graph.addEdge('spoke2.ts', 'hub.ts');
+            graph.addEdge('spoke3.ts', 'hub.ts');
+            
+            // hub: in=3, out=0 -> (3+0)/(2*3) = 0.5
+            // spokes: in=0, out=1 -> (0+1)/(2*3) = 0.167 each
+            const result = graph.getAverageConnectivity();
+            expect(result).toBeGreaterThan(0);
+            expect(result).toBeLessThan(1);
+        });
+
+        it('should handle isolated nodes', () => {
+            graph.addNode(createMockFile('a.ts'));
+            graph.addNode(createMockFile('b.ts'));
+            graph.addNode(createMockFile('isolated.ts'));
+            graph.addEdge('a.ts', 'b.ts');
+            
+            const result = graph.getAverageConnectivity();
+            expect(result).toBeGreaterThan(0);
+        });
+    });
+
+    describe('Real-world scenarios', () => {
+        it('should calculate connectivity for typical module graph', () => {
+            graph.addNode(createMockFile('index.ts'));
+            graph.addNode(createMockFile('utils.ts'));
+            graph.addNode(createMockFile('service.ts'));
+            graph.addNode(createMockFile('controller.ts'));
+            
+            graph.addEdge('index.ts', 'controller.ts');
+            graph.addEdge('controller.ts', 'service.ts');
+            graph.addEdge('service.ts', 'utils.ts');
+            
+            const result = graph.getAverageConnectivity();
+            expect(result).toBeGreaterThan(0);
+            expect(result).toBeLessThan(1);
+        });
+    });
+});

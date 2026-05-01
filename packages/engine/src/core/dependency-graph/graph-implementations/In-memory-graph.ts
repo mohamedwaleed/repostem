@@ -96,6 +96,37 @@ export class InMemoryGraph implements IGraph {
         this.repositoryRoot = root;
     }
 
+    getTotalEdgeCount(): number {
+        let count = 0;
+        for (const [, toSet] of this.edges) {
+            count += toSet.size;
+        }
+        return count;
+    }
+
+    getNodesInCycles(): Set<string> {
+        const cycles = this.detectCycles();
+        const nodesInCycles = new Set<string>();
+        for (const cycle of cycles) {
+            for (const node of cycle.nodes) {
+                nodesInCycles.add(node);
+            }
+        }
+        return nodesInCycles;
+    }
+
+    getAverageConnectivity(): number {
+        const totalFiles = this.nodes.size;
+        if (totalFiles <= 1) return 0;
+
+        let totalConnectivity = 0;
+        for (const [filePath] of this.nodes) {
+            const inDegree = this.getInDegree(filePath);
+            const outDegree = this.getOutDegree(filePath);
+            totalConnectivity += (inDegree + outDegree) / (2 * (totalFiles - 1));
+        }
+        return totalFiles > 0 ? totalConnectivity / totalFiles : 0;
+    }
 
     private getCycles(): Cycle[] {
         const nodes = Array.from(this.nodes.keys());

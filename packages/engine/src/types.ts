@@ -1,4 +1,4 @@
-import { KnexMigrationResult } from "./persistence";
+import { KnexMigrationResult, SnapshotRepository } from "./persistence";
 
 export interface ParsedFile {
     path: string;
@@ -209,13 +209,6 @@ export interface SnapshotHistoryRecord {
   created_at: Date;
 }
 
-export interface HistoryOptions {
-  repo?: string;
-  branch?: string;
-  noBranchFilter?: boolean;
-}
-
-
 export interface DriftResult {
   previousSnapshot: DriftSnapshotInfo;
   currentSnapshot: DriftSnapshotInfo;
@@ -230,7 +223,20 @@ export interface DriftResult {
   };
   dependencyChanges: DependencyChangeSummary;
   cycleChanges: CycleChangeSummary;
-  complexityScore: number;
+  complexityScoreChange: ComplexityScoreChange;
+  hotspotChanges: HotspotChangeSummary;
+}
+
+export interface HotspotChangeSummary {
+  newHotspots: HotspotItem[];
+  resolvedHotspots: HotspotItem[];
+}
+
+export interface HotspotItem {
+  file: string;
+  currentHotspotScore: number;
+  previousHotspotScore: number;
+  delta: number;
 }
 
 export interface DriftSnapshotInfo {
@@ -261,4 +267,32 @@ export interface DependencyChangeSummary {
 export interface CycleChangeSummary {
   newCycles: Cycle[];
   resolvedCycles: Cycle[];
+}
+
+export interface ComplexityScoreChange {
+  previousComplexityScore: number;
+  currentComplexityScore: number;
+  delta: number;
+}
+
+export interface ServiceOptions {
+  repo?: string;
+  branch?: string;
+  noBranchFilter?: boolean;
+}
+
+export interface ServiceContext {
+  repoPath: string;
+  config: {
+    repo_id: string;
+    storage_type: string;
+    storage_path: string;
+  };
+  repo: SnapshotRepository;
+  adapter: any; // DatabaseAdapter - using any to avoid circular dependency
+  branch: string | undefined;
+}
+
+export interface DriftServiceOptions extends ServiceOptions {
+  since?: string; // snapshot ID
 }
