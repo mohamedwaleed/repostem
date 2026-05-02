@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Implement repostem drift command for architectural drift detection (#25)
 - Implement repostem history command (#19)
 - Implement snapshot repository abstraction layer (#14)
 - Persist structural snapshot during repostem analyze (#13)
@@ -15,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Refactor metric responsibilities into structural, repository, and temporal layers (#24)
+- Extract reusable banner function for consistent CLI output across commands
+- Improve impact change filtering with dual threshold (ratio + absolute count)
+
+### Fixed
+- Fix impact delta calculation to correctly show increased/decreased counts
 
 ## [0.1.6]
 

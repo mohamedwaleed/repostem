@@ -21,7 +21,7 @@ import { computeHotspotScores } from "../../core/hostspot-engine/hostspot-engine
 export const detectDrift = (
     snapshot1: SnapshotAggregate,
     snapshot2: SnapshotAggregate,
-    thresholds: { riskDelta: number; impactDeltaRatio: number, hotspotThreshold?: number } = { riskDelta: 0.05, impactDeltaRatio: 0.05, hotspotThreshold: 0.25 }
+    thresholds: { riskDelta: number; impactDeltaRatio: number, impactDeltaCount: number, hotspotThreshold?: number } = { riskDelta: 0.05, impactDeltaRatio: 0.01, impactDeltaCount: 50, hotspotThreshold: 0.25 }
 ): DriftResult => {
     const snapshotDependencyGraph1 = buildDependencyGraphFromSnapshot(snapshot1);
     const snapshotDependencyGraph2 = buildDependencyGraphFromSnapshot(snapshot2);
@@ -35,7 +35,7 @@ export const detectDrift = (
     const impactChanges = detectImpactChanges(
         snapshot1,
         snapshot2,
-        thresholds.impactDeltaRatio,
+        { impactDeltaRatio: thresholds.impactDeltaRatio, impactDeltaCount: thresholds.impactDeltaCount },
         snapshotDependencyGraph1,
         snapshotDependencyGraph2
     );
@@ -117,48 +117,42 @@ const detectRiskChanges = (
 const detectImpactChanges = (
     snapshot1: SnapshotAggregate,
     snapshot2: SnapshotAggregate,
-    threshold: number,
+    thresholds: { impactDeltaRatio: number; impactDeltaCount: number },
     snapshotDependencyGraph1: IGraph,
     snapshotDependencyGraph2: IGraph
 ): DriftResult['impactChanges'] => {
     const items: ImpactChangeItem[] = [];
     let increasedCount = 0;
+    let decreasedCount = 0;
 
-    // Pre-compute impact for all files in both snapshots
-    const impactMap1 = new Map<string, number>();
-    const impactMap2 = new Map<string, number>();
-    
-    for (const [filePath, _] of snapshot1.files) {
-        const impact = computeImpact(snapshotDependencyGraph1, filePath);
-        impactMap1.set(filePath, impact.impactRatio);
-    }
-    
-    for (const [filePath, _] of snapshot2.files) {
-        const impact = computeImpact(snapshotDependencyGraph2, filePath);
-        impactMap2.set(filePath, impact.impactRatio);
-    }
-
-    // Compare pre-computed impact values
     for (const [filePath, _] of snapshot2.files) {
         const file1 = snapshot1.files.get(filePath);
         if (!file1) continue;
+        
+        const prevImpact = computeImpact(snapshotDependencyGraph1, filePath);
+        const currImpact = computeImpact(snapshotDependencyGraph2, filePath);
 
-        const prevImpactRatio = impactMap1.get(filePath) ?? 0;
-        const currImpactRatio = impactMap2.get(filePath) ?? 0;
-        const delta = currImpactRatio - prevImpactRatio;
+        const deltaRatio = currImpact.impactRatio - prevImpact.impactRatio;
+        const deltaCount = currImpact.totalImpactCount - prevImpact.totalImpactCount;
 
-        if (Math.abs(delta) > threshold) {
+        // Show file if ratio change exceeds threshold OR absolute count change exceeds threshold
+        if (Math.abs(deltaRatio) > thresholds.impactDeltaRatio || Math.abs(deltaCount) > thresholds.impactDeltaCount) {
             items.push({
                 file: filePath,
-                previousImpactRatio: prevImpactRatio,
-                currentImpactRatio: currImpactRatio,
-                delta
+                previousImpactRatio: prevImpact.impactRatio,
+                currentImpactRatio: currImpact.impactRatio,
+                delta: deltaRatio
             });
-            if (delta > 0) increasedCount++;
+            // Count as increased only if the actual impact ratio increased
+            if (deltaRatio > 0) {
+                increasedCount++;
+            } else {
+                decreasedCount++;
+            }
         }
     }
 
-    return { increasedCount, items };
+    return { increasedCount, decreasedCount, items };
 };
 
 const detectDependencyChanges = (

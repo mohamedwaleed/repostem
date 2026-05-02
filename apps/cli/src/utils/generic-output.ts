@@ -1,6 +1,24 @@
 import { classify, getMetricLabel, MetricClassification } from "@repostem/engine";
 import chalk from 'chalk';
 
+export function getBanner(): string {
+  return [
+    '',
+    chalk.bold.cyan(' ____  _____ ____   ___  ____ _____ _____ __  __ '),
+    chalk.bold.cyan('|  _ \\| ____|  _ \\ / _ \\/ ___|_   _| ____|  \\/  |'),
+    chalk.bold.cyan('| |_) |  _| | |_) | | | \\___ \\ | | |  _| | |\\/| |'),
+    chalk.bold.cyan('|  _ <| |___|  __/| |_| |___) || | | |___| |  | |'),
+    chalk.bold.cyan('|_| \\_\\_____|_|    \\___/|____/ |_| |_____|_|  |_|'),
+    '',
+    chalk.gray('  Structural Risk Analysis Tool'),
+    ''
+  ].join('\n');
+}
+
+export function printBanner(): void {
+  console.log(getBanner());
+}
+
 export enum OutputFormat {
   TEXT = "text",
   JSON = "json", 
@@ -53,16 +71,8 @@ export class AnalysisTextFormatter implements GenericOutputFormatter {
   format(data: any, context?: any): string {
     const sections: string[] = [];
 
-    // RepoStem Banner
-    sections.push('');
-    sections.push(chalk.bold.cyan(' ____  _____ ____   ___  ____ _____ _____ __  __ '));
-    sections.push(chalk.bold.cyan('|  _ \\| ____|  _ \\ / _ \\/ ___|_   _| ____|  \\/  |'));
-    sections.push(chalk.bold.cyan('| |_) |  _| | |_) | | | \\___ \\ | | |  _| | |\\/| |'));
-    sections.push(chalk.bold.cyan('|  _ <| |___|  __/| |_| |___) || | | |___| |  | |'));
-    sections.push(chalk.bold.cyan('|_| \\_\\_____|_|    \\___/|____/ |_| |_____|_|  |_|'));
-    sections.push('');
-    sections.push(chalk.gray('  Structural Risk Analysis Tool'));
-    sections.push('');
+    // RepoStem Banner (using reusable function)
+    sections.push(getBanner());
     sections.push(chalk.bold.cyan('RepoStem Structural Analysis'));
     sections.push("");
     sections.push(chalk.gray(`Files analyzed: ${data.totalFiles || 0}`));

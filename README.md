@@ -39,6 +39,8 @@ RepoStem aims to evolve into an AI Project Brain — a persistent cognition laye
 ### CLI Commands
 - `init` - Initialize persistence for snapshot storage (SQLite or PostgreSQL)
 - `analyze` - Full repository analysis with dependency graph
+- `drift` - Detect architectural drift between snapshots
+- `history` - View snapshot history
 - `risk` - Risk metrics and scoring for all files
 - `cycles` - Detect and report circular dependencies
 - `impact` - Analyze impact of changing specific files

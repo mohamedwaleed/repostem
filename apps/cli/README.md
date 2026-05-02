@@ -84,6 +84,18 @@ repostem history -b main
 repostem history -o json
 ```
 
+### Detect Architectural Drift
+```bash
+# Compare the two most recent snapshots
+repostem drift
+
+# Compare current snapshot with a specific baseline
+repostem drift --since <snapshot-id>
+
+# Drift for a specific repository
+repostem drift -r /path/to/repo
+```
+
 ### Ask AI Questions
 ```bash
 # Get AI explanations about structural metrics
@@ -192,6 +204,32 @@ repostem cycles [options]
 **Example:**
 ```bash
 repostem cycles -r ./my-project -o json
+```
+
+### `drift`
+Detect architectural drift between snapshots. Compares structural metrics across snapshots to identify risk changes, impact changes, new cycles, and hotspot evolution.
+
+```bash
+repostem drift [options]
+```
+
+**Options:**
+- `-r, --repo <path>`: Path to repository (default: current directory)
+- `-b, --branch <name>`: Filter by branch (defaults to the current Git branch when in a Git repo)
+- `--no-branch-filter`: Show snapshots from every branch (overrides branch detection)
+- `--since <id>`: Snapshot ID to compare against (from history)
+- `-o, --output <format>`: Output format - `text`, `json` (default: `text`)
+
+**Example:**
+```bash
+# Compare the two most recent snapshots
+repostem drift
+
+# Compare current snapshot with a specific baseline
+repostem drift --since 69b34f51-0ece-4072-b943-83f27328be84
+
+# Drift analysis with JSON output
+repostem drift -o json
 ```
 
 ### `history`
