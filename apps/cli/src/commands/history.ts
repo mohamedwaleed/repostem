@@ -1,8 +1,5 @@
 import { Command } from "commander";
-import {
-  getSnapshotHistory,
-  HistoryOptions,
-} from "@repostem/engine";
+import { getSnapshotHistory } from "@repostem/engine";
 import { outputSnapshotHistory, parseOutputFormat, OutputFormat } from "../utils/output";
 
 export default new Command()
@@ -24,7 +21,7 @@ export default new Command()
     "Output format (text, table, json)",
     "table"
   )
-  .action(async (options: HistoryOptions & { output?: string }) => {
+  .action(async (options: { repo?: string; branch?: string; output?: string }) => {
     try {
       const snapshots = await getSnapshotHistory(options);
       const format = parseOutputFormat(options.output);
