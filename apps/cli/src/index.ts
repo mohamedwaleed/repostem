@@ -8,6 +8,7 @@ import cyclesCommand from "./commands/cycles";
 import historyCommand from "./commands/history";
 import impactCommand from "./commands/impact";
 import initCommand from "./commands/init";
+import migrateCommand from "./commands/migrate";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -23,6 +24,7 @@ program
   .version(packageJson.version);
 
 program.addCommand(initCommand);
+program.addCommand(migrateCommand);
 program.addCommand(analyzeCommand);
 program.addCommand(riskCommand);
 program.addCommand(impactCommand);

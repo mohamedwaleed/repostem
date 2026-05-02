@@ -7,6 +7,7 @@ import { DatabaseAdapter } from '../adapters';
 export interface SnapshotRecord {
   id: string;
   repo_id: string;
+  repository_root: string | null;
   git_remote_url: string | null;
   branch: string | null;
   commit_hash: string | null;
@@ -22,6 +23,7 @@ export interface SnapshotRecord {
 export interface CreateSnapshotData {
   id: string;
   repoId: string;
+  repositoryRoot?: string | null;
   gitRemoteUrl?: string | null;
   branch?: string | null;
   commitHash?: string | null;
@@ -50,6 +52,7 @@ export class SnapshotRepository {
     const record: SnapshotRecord = {
       id: data.id,
       repo_id: data.repoId,
+      repository_root: data.repositoryRoot || null,
       git_remote_url: data.gitRemoteUrl || null,
       branch: data.branch || null,
       commit_hash: data.commitHash || null,
@@ -62,6 +65,7 @@ export class SnapshotRepository {
     await this.knex(SnapshotRepository.TABLE_NAME).insert({
       id: record.id,
       repo_id: record.repo_id,
+      repository_root: record.repository_root,
       git_remote_url: record.git_remote_url,
       branch: record.branch,
       commit_hash: record.commit_hash,
@@ -79,9 +83,9 @@ export class SnapshotRepository {
    * @param id - The snapshot ID
    * @returns The snapshot record or undefined if not found
    */
-  async getSnapshotById(id: string): Promise<SnapshotRecord | undefined> {
+  async getSnapshotById(repoId: string, id: string): Promise<SnapshotRecord | undefined> {
     const rows = await this.knex(SnapshotRepository.TABLE_NAME)
-      .where({ id })
+      .where({ repo_id: repoId, id })
       .select('*');
     
     return rows[0] as SnapshotRecord | undefined;
@@ -120,13 +124,19 @@ export class SnapshotRepository {
   /**
    * Get all snapshots for a repo
    * @param repoId - The repo ID
+   * @param limit - Optional limit for the number of snapshots to return
    * @returns Array of snapshot records
    */
-  async getSnapshotsByRepoId(repoId: string): Promise<SnapshotRecord[]> {
-    const rows = await this.knex(SnapshotRepository.TABLE_NAME)
+  async getSnapshotsByRepoId(repoId: string, limit?: number): Promise<SnapshotRecord[]> {
+    const query = this.knex(SnapshotRepository.TABLE_NAME)
       .where({ repo_id: repoId })
-      .orderBy('created_at', 'desc')
-      .select('*');
+      .orderBy('created_at', 'desc');
+    
+    if (limit) {
+      query.limit(limit);
+    }
+    
+    const rows = await query.select('*');
     
     return rows as SnapshotRecord[];
   }
@@ -135,15 +145,36 @@ export class SnapshotRepository {
    * Get snapshots by branch
    * @param repoId - The repo ID
    * @param branch - The branch name
+   * @param limit - Optional limit for the number of snapshots to return
    * @returns Array of snapshot records
    */
-  async getSnapshotsByBranch(repoId: string, branch: string): Promise<SnapshotRecord[]> {
-    const rows = await this.knex(SnapshotRepository.TABLE_NAME)
+  async getSnapshotsByBranch(repoId: string, branch: string, limit?: number): Promise<SnapshotRecord[]> {
+    const query = this.knex(SnapshotRepository.TABLE_NAME)
       .where({ repo_id: repoId, branch })
-      .orderBy('created_at', 'desc')
-      .select('*');
+      .orderBy('created_at', 'desc');
+    
+    if (limit) {
+      query.limit(limit);
+    }
+    
+    const rows = await query.select('*');
     
     return rows as SnapshotRecord[];
+  }
+
+  /**
+   * Get a snapshot by branch and ID
+   * @param repoId - The repo ID
+   * @param branch - The branch name
+   * @param id - The snapshot ID
+   * @returns The snapshot record or undefined if not found
+   */
+  async getSnapshotByBranchAndId(repoId: string, branch: string, id: string): Promise<SnapshotRecord | undefined> {
+    const rows = await this.knex(SnapshotRepository.TABLE_NAME)
+      .where({ repo_id: repoId, branch, id })
+      .select('*');
+    
+    return rows[0] as SnapshotRecord | undefined;
   }
 
   /**

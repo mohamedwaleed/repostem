@@ -3,6 +3,7 @@ import { buildSnapshotSummary } from './snapshot-summary';
 import { SnapshotAggregate, MetricClassification } from '../types';
 
 const createSnapshot = (overrides: Partial<SnapshotAggregate> = {}): SnapshotAggregate => ({
+  repositoryRoot: '/test/repo',
   metadata: {
     branch: 'main',
     commitHash: 'abc123',

@@ -14,6 +14,7 @@ export async function buildSnapshot(repoPath: string): Promise<SnapshotAggregate
     const fileSnapshots = buildFileSnapshots(dependencyGraph, fileMetrics);
     
     return {
+        repositoryRoot: repoPath,
         metadata: {
             branch: await detectBranch(repoPath),
             commitHash: await detectCommitHash(repoPath),

@@ -14,4 +14,9 @@ export default interface IGraph {
     
     getDirectDependent(node: string): string[];
     getTransitiveDependents(node: string): string[];
+    
+    // Graph metrics
+    getTotalEdgeCount(): number;
+    getNodesInCycles(): Set<string>;
+    getAverageConnectivity(): number;
 }

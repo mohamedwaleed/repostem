@@ -5,7 +5,7 @@ export { PostgreSQLAdapter } from './adapters';
 export { AdapterFactory, DatabaseType } from './adapters';
 
 // Migrations
-export { runInitMigration, isSchemaInitialized, MigrationResult } from './migrations';
+export { runKnexMigrations, getMigrationStatus, rollbackMigrations, KnexMigrationResult } from './knex-migration-runner';
 
 // Repositories
 export {
@@ -28,3 +28,6 @@ export {
 
 // Snapshot persister
 export { persistSnapshot, tryPersistSnapshot, PersistResult } from './snapshot-persister';
+
+// Snapshot reconstructor
+export { reconstructSnapshot } from './snapshot-reconstructor';

@@ -41,13 +41,12 @@ vi.mock('../persistence/repositories', () => ({
 }));
 
 // Mock migrations
-vi.mock('../persistence/migrations', () => ({
-    runInitMigration: vi.fn().mockResolvedValue({
+vi.mock('../persistence/knex-migration-runner', () => ({
+    runKnexMigrations: vi.fn().mockResolvedValue({
         success: true,
         message: 'Migration successful',
-        tablesCreated: ['repo', 'snapshot', 'file_snapshot', 'dependency_edge', 'cycle']
-    }),
-    isSchemaInitialized: vi.fn().mockResolvedValue(false)
+        migrationsRun: ['20260501000000_init_schema.js']
+    })
 }));
 
 // Mock config functions
@@ -95,6 +94,7 @@ describe('InitService - initializeRepo', () => {
             expect(result.config.storage_path).toBe('/tmp/test-repostem-init.db');
             expect(result.migrationResult).toBeDefined();
             expect(result.migrationResult.success).toBe(true);
+            expect(result.migrationResult.migrationsRun).toBeDefined();
         });
 
         it('should generate a valid UUID for repo_id', async () => {
@@ -171,11 +171,11 @@ describe('InitService - initializeRepo', () => {
 
     describe('Error Handling', () => {
         it('should handle migration failure', async () => {
-            const { runInitMigration } = await import('../persistence/migrations');
-            vi.mocked(runInitMigration).mockResolvedValueOnce({
+            const { runKnexMigrations } = await import('../persistence/knex-migration-runner');
+            vi.mocked(runKnexMigrations).mockResolvedValueOnce({
                 success: false,
                 message: 'Migration failed: Table already exists',
-                tablesCreated: []
+                migrationsRun: []
             });
 
             const testRepoPath = '/tmp/test-repostem-migration-fail';
@@ -189,8 +189,8 @@ describe('InitService - initializeRepo', () => {
         });
 
         it('should disconnect from database on error', async () => {
-            const { runInitMigration } = await import('../persistence/migrations');
-            vi.mocked(runInitMigration).mockRejectedValueOnce(new Error('Connection failed'));
+            const { runKnexMigrations } = await import('../persistence/knex-migration-runner');
+            vi.mocked(runKnexMigrations).mockRejectedValueOnce(new Error('Connection failed'));
 
             const testRepoPath = '/tmp/test-repostem-disconnect';
 

@@ -1,6 +1,6 @@
-import { AdapterFactory } from "../persistence/adapters";
-import { runInitMigration } from "../persistence/migrations";
-import { RepoRepository, SnapshotRepository } from "../persistence/repositories";
+import { AdapterFactory } from '../persistence/adapters';
+import { RepoRepository, SnapshotRepository } from '../persistence/repositories';
+import { runKnexMigrations, KnexMigrationResult } from '../persistence/knex-migration-runner';
 import { getConfig, updateConfigFile, isPersistenceConfigured } from "../config/config-loader";
 import { InitRepoOptions, InitRepoResult, ResetPersistenceResult } from "../types";
 
@@ -22,7 +22,7 @@ export async function initializeRepo(
   try {
     await adapter.connect();
 
-    const migrationResult = await runInitMigration(adapter);
+    const migrationResult = await runKnexMigrations(adapter);
 
     if (!migrationResult.success) {
       throw new Error(`Migration failed: ${migrationResult.message}`);
@@ -62,7 +62,7 @@ export async function initializeRepo(
       message: `Repository initialized successfully.\n` +
         `Repo ID: ${repoId}\n` +
         `Storage: ${storageType} at ${storagePath}\n` +
-        `Tables created: ${migrationResult.tablesCreated.length}`,
+        `Migrations run: ${migrationResult.migrationsRun.length}`,
     };
   } catch (error) {
     try {
