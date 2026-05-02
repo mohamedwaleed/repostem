@@ -124,19 +124,34 @@ const detectImpactChanges = (
     const items: ImpactChangeItem[] = [];
     let increasedCount = 0;
 
+    // Pre-compute impact for all files in both snapshots
+    const impactMap1 = new Map<string, number>();
+    const impactMap2 = new Map<string, number>();
+    
+    for (const [filePath, _] of snapshot1.files) {
+        const impact = computeImpact(snapshotDependencyGraph1, filePath);
+        impactMap1.set(filePath, impact.impactRatio);
+    }
+    
+    for (const [filePath, _] of snapshot2.files) {
+        const impact = computeImpact(snapshotDependencyGraph2, filePath);
+        impactMap2.set(filePath, impact.impactRatio);
+    }
+
+    // Compare pre-computed impact values
     for (const [filePath, _] of snapshot2.files) {
         const file1 = snapshot1.files.get(filePath);
         if (!file1) continue;
 
-        const prevImpact = computeImpact(snapshotDependencyGraph1, filePath);
-        const currImpact = computeImpact(snapshotDependencyGraph2, filePath);
-        const delta = currImpact.impactRatio - prevImpact.impactRatio;
+        const prevImpactRatio = impactMap1.get(filePath) ?? 0;
+        const currImpactRatio = impactMap2.get(filePath) ?? 0;
+        const delta = currImpactRatio - prevImpactRatio;
 
         if (Math.abs(delta) > threshold) {
             items.push({
                 file: filePath,
-                previousImpactRatio: prevImpact.impactRatio,
-                currentImpactRatio: currImpact.impactRatio,
+                previousImpactRatio: prevImpactRatio,
+                currentImpactRatio: currImpactRatio,
                 delta
             });
             if (delta > 0) increasedCount++;

@@ -815,8 +815,14 @@ describe('DriftEngine - detectDrift', () => {
                 .mockReturnValueOnce(0.6);
 
             (computeImpact as any)
+                // Snapshot 1 - all files
                 .mockReturnValueOnce({ file: 'src/api.ts', impactRatio: 0.2, directDependents: [], transitiveDependents: [], totalImpactCount: 2 })
-                .mockReturnValueOnce({ file: 'src/api.ts', impactRatio: 0.8, directDependents: [], transitiveDependents: [], totalImpactCount: 8 });
+                .mockReturnValueOnce({ file: 'src/utils.ts', impactRatio: 0.1, directDependents: [], transitiveDependents: [], totalImpactCount: 1 })
+                .mockReturnValueOnce({ file: 'src/db.ts', impactRatio: 0.1, directDependents: [], transitiveDependents: [], totalImpactCount: 1 })
+                // Snapshot 2 - all files
+                .mockReturnValueOnce({ file: 'src/api.ts', impactRatio: 0.8, directDependents: [], transitiveDependents: [], totalImpactCount: 8 })
+                .mockReturnValueOnce({ file: 'src/utils.ts', impactRatio: 0.1, directDependents: [], transitiveDependents: [], totalImpactCount: 1 })
+                .mockReturnValueOnce({ file: 'src/db.ts', impactRatio: 0.1, directDependents: [], transitiveDependents: [], totalImpactCount: 1 });
 
             (computeHotspotScores as any)
                 .mockReturnValueOnce(new Map([

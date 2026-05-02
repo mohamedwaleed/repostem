@@ -28,3 +28,6 @@ export {
 
 // Snapshot persister
 export { persistSnapshot, tryPersistSnapshot, PersistResult } from './snapshot-persister';
+
+// Snapshot reconstructor
+export { reconstructSnapshot } from './snapshot-reconstructor';
