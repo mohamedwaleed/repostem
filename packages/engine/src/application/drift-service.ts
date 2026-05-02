@@ -59,7 +59,12 @@ export async function detectDrift(options: DriftServiceOptions = {}): Promise<Dr
     );
 
     // Compare them using the drift engine
-    const result = detectDriftEngine(previousSnapshot, currentSnapshot);
+    const result = detectDriftEngine(previousSnapshot, currentSnapshot, { 
+      riskDelta: 0.05, 
+      impactDeltaRatio: 0.01, 
+      impactDeltaCount: 50,
+      hotspotThreshold: 0.25
+    });
 
     return result;
   });

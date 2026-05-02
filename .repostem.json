@@ -1,10 +1,13 @@
 {
+  "respectGitignore": false,
   "ignore": [
     "packages/*/dist/**",
-    "apps/*/dist/**", 
+    "apps/*/dist/**",
     "packages/*/node_modules/**",
     "apps/*/node_modules/**",
     "examples/**"
   ],
-  "respectGitignore": false
+  "storage_type": "sqlite",
+  "storage_path": "/Users/mohamedmohamed/Desktop/.repostem.db",
+  "repo_id": "042cf799-f376-4117-9594-2b02fa9f04d2"
 }

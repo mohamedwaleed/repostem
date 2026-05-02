@@ -225,10 +225,20 @@ complexity_score =
 #### Filtering Rules
 Only show:
 
-risk_delta > 0.05
-impact_delta_ratio > 0.05
-new cycles
-new files entering hotspot list
+**Risk Changes:**
+- `risk_delta > 0.05` (absolute risk score change)
+
+**Impact Changes:**
+- `impact_delta_ratio > 0.01` (1% relative change) OR
+- `impact_delta_count > 50` (absolute dependent count change)
+
+**Cycle Changes:**
+- All new cycles
+- All resolved cycles
+
+**Hotspot Changes:**
+- New files entering hotspot list (score > threshold)
+- Files exiting hotspot list
 
 #### Example output
 === Architectural Drift (Snapshot N vs N-1) ===

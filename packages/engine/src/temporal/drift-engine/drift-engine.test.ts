@@ -161,6 +161,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -212,6 +213,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -239,6 +241,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -262,6 +265,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -291,6 +295,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -317,6 +322,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -337,10 +343,12 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
             expect(result.impactChanges.increasedCount).toBe(1);
+            expect(result.impactChanges.decreasedCount).toBe(0);
             expect(result.impactChanges.items).toHaveLength(1);
             expect(result.impactChanges.items[0].delta).toBeCloseTo(0.7, 10);
         });
@@ -356,6 +364,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -381,11 +390,13 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
             expect(result.impactChanges.items).toHaveLength(2);
             expect(result.impactChanges.increasedCount).toBe(2);
+            expect(result.impactChanges.decreasedCount).toBe(0);
         });
     });
 
@@ -639,6 +650,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -666,6 +678,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -687,6 +700,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.4
             });
 
@@ -704,6 +718,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -722,6 +737,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -743,6 +759,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -765,6 +782,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -798,6 +816,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -857,6 +876,7 @@ describe('DriftEngine - detectDrift', () => {
             const result = detectDrift(snapshot1, snapshot2, { 
                 riskDelta: 0.05, 
                 impactDeltaRatio: 0.05,
+                impactDeltaCount: 50,
                 hotspotThreshold: 0.25
             });
 
@@ -866,7 +886,7 @@ describe('DriftEngine - detectDrift', () => {
             expect(result.riskChanges.decreasedCount).toBe(1);
 
             // Impact changes
-            expect(result.impactChanges.items).toHaveLength(1);
+            expect(result.impactChanges.items).toHaveLength(2);
 
             // Dependency changes
             expect(result.dependencyChanges.newEdges).toBe(1);

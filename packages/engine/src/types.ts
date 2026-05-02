@@ -219,6 +219,7 @@ export interface DriftResult {
   };
   impactChanges: {
     increasedCount: number;
+    decreasedCount: number;
     items: ImpactChangeItem[];
   };
   dependencyChanges: DependencyChangeSummary;
