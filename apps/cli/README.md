@@ -84,6 +84,18 @@ repostem history -b main
 repostem history -o json
 ```
 
+### Identify Architectural Hotspots
+```bash
+# Show current architectural hotspots
+repostem hotspot
+
+# Hotspots for a specific repository
+repostem hotspot -r /path/to/repo
+
+# Hotspots with JSON output
+repostem hotspot -o json
+```
+
 ### Detect Architectural Drift
 ```bash
 # Compare the two most recent snapshots
@@ -250,6 +262,36 @@ repostem history [options]
 repostem history
 repostem history -b main -o json
 repostem history --no-branch-filter
+```
+
+### `hotspot`
+Identify architectural hotspots - files with high structural risk and impact that warrant attention.
+
+```bash
+repostem hotspot [options]
+```
+
+**Options:**
+- `-r, --repo <path>`: Path to repository (default: current directory)
+- `-o, --output <format>`: Output format - `text`, `json` (default: `text`)
+
+**Output includes:**
+- Risk score with classification (Low/Medium/High)
+- Impact ratio as percentage
+- Churn score with classification
+- Circular dependency indicator
+- Overall hotspot score with classification
+
+**Example:**
+```bash
+# Show current hotspots
+repostem hotspot
+
+# Hotspots for a specific repository
+repostem hotspot -r /path/to/repo
+
+# JSON output for integration
+repostem hotspot -o json
 ```
 
 ### `ask`

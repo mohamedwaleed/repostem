@@ -16,12 +16,12 @@ import { calculateComplexityScore } from "../../repository-metrics/complexity-sc
 import IGraph from "../../core/dependency-graph/graph-implementations/graph-interface";
 import { buildDependencyGraphFromSnapshot } from "../../core/dependency-graph/dependency-graph";
 import { computeImpact } from "../../core/impact-engine/impact-engine";
-import { computeHotspotScores } from "../../core/hostspot-engine/hostspot-engine";
+import { computeHotspots } from "../../core/hostspot-engine/hostspot-engine";
 
 export const detectDrift = (
     snapshot1: SnapshotAggregate,
     snapshot2: SnapshotAggregate,
-    thresholds: { riskDelta: number; impactDeltaRatio: number, impactDeltaCount: number, hotspotThreshold?: number } = { riskDelta: 0.05, impactDeltaRatio: 0.01, impactDeltaCount: 50, hotspotThreshold: 0.25 }
+    thresholds: { riskDelta: number; impactDeltaRatio: number, impactDeltaCount: number, hotspotThreshold?: number } = { riskDelta: 0.05, impactDeltaRatio: 0.01, impactDeltaCount: 50, hotspotThreshold: 0.2 }
 ): DriftResult => {
     const snapshotDependencyGraph1 = buildDependencyGraphFromSnapshot(snapshot1);
     const snapshotDependencyGraph2 = buildDependencyGraphFromSnapshot(snapshot2);
@@ -53,7 +53,6 @@ export const detectDrift = (
         snapshotDependencyGraph2,
         thresholds.hotspotThreshold
     );
-    
     return {
         previousSnapshot: createDriftSnapshotInfo(snapshot1),
         currentSnapshot: createDriftSnapshotInfo(snapshot2),
@@ -230,8 +229,9 @@ const detectHotspotChanges = (
     snapshot2: SnapshotAggregate,
     snapshotDependencyGraph1: IGraph,
     snapshotDependencyGraph2: IGraph,
-    hotspotThreshold: number = 0.25
+    hotspotThreshold: number = 0.2
 ): HotspotChangeSummary => {
+    const minimalDelta = 0.005;
     const newHotspots: HotspotItem[] = [];
     const resolvedHotspots: HotspotItem[] = [];
 
@@ -247,39 +247,39 @@ const detectHotspotChanges = (
     }
 
     // Compute hotspot scores for both snapshots
-    const hotspotScores1 = computeHotspotScores(metrics1, snapshotDependencyGraph1);
-    const hotspotScores2 = computeHotspotScores(metrics2, snapshotDependencyGraph2);
+    const hotspot1 = computeHotspots(metrics1, snapshotDependencyGraph1);
+    const hotspot2 = computeHotspots(metrics2, snapshotDependencyGraph2);
 
     // Check all files in current snapshot
-    for (const [filePath, currentScore] of hotspotScores2) {
-        const previousScore = hotspotScores1.get(filePath) ?? 0;
-        const wasHotspot = previousScore >= hotspotThreshold;
-        const isHotspot = currentScore >= hotspotThreshold;
+    for (const [filePath, currentHotspot] of hotspot2) {
+        const previousHotspot = hotspot1.get(filePath) ?? { hotspotScore: 0 };
+        const wasHotspot = previousHotspot.hotspotScore >= hotspotThreshold;
+        const isHotspot = currentHotspot.hotspotScore >= hotspotThreshold;
 
         // New hotspot: wasn't a hotspot before, but is now
         if (!wasHotspot && isHotspot) {
             newHotspots.push({
                 file: filePath,
-                currentHotspotScore: currentScore,
-                previousHotspotScore: previousScore,
-                delta: currentScore - previousScore
+                currentHotspotScore: currentHotspot.hotspotScore,
+                previousHotspotScore: previousHotspot.hotspotScore,
+                delta: currentHotspot.hotspotScore - previousHotspot.hotspotScore
             });
         }
     }
 
     // Check all files in previous snapshot for resolved hotspots
-    for (const [filePath, previousScore] of hotspotScores1) {
-        const currentScore = hotspotScores2.get(filePath) ?? 0;
-        const wasHotspot = previousScore >= hotspotThreshold;
-        const isHotspot = currentScore >= hotspotThreshold;
+    for (const [filePath, previousHotspot] of hotspot1) {
+        const currentHotspot = hotspot2.get(filePath) ?? { hotspotScore: 0 };
+        const wasHotspot = previousHotspot.hotspotScore >= hotspotThreshold;
+        const isHotspot = currentHotspot.hotspotScore >= hotspotThreshold;
 
         // Resolved hotspot: was a hotspot before, but isn't now
-        if (wasHotspot && !isHotspot) {
+        if (wasHotspot && !isHotspot && Math.abs(currentHotspot.hotspotScore - previousHotspot.hotspotScore) > minimalDelta) {
             resolvedHotspots.push({
                 file: filePath,
-                currentHotspotScore: currentScore,
-                previousHotspotScore: previousScore,
-                delta: currentScore - previousScore
+                currentHotspotScore: currentHotspot.hotspotScore,
+                previousHotspotScore: previousHotspot.hotspotScore,
+                delta: currentHotspot.hotspotScore - previousHotspot.hotspotScore
             });
         }
     }

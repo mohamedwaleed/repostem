@@ -10,6 +10,7 @@ import impactCommand from "./commands/impact";
 import initCommand from "./commands/init";
 import migrateCommand from "./commands/migrate";
 import driftCommand from "./commands/drift";
+import hotspotCommand from "./commands/hotspot";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -33,5 +34,6 @@ program.addCommand(askCommand);
 program.addCommand(cyclesCommand);
 program.addCommand(historyCommand);
 program.addCommand(driftCommand);
+program.addCommand(hotspotCommand);
 
 program.parse();

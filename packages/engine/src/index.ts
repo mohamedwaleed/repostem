@@ -13,6 +13,7 @@ export {
     detectDrift,
     DriftResult,
     getSnapshotHistory,
+    calculateHotspots,
 } from './application';
 
 // Utilities
