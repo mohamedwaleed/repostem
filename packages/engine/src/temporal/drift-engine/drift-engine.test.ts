@@ -635,8 +635,8 @@ describe('DriftEngine - detectDrift', () => {
     describe('detectHotspotChanges', () => {
         it('should detect new hotspots', () => {
             (computeHotspots as any)
-                .mockReturnValueOnce(new Map([['file1.ts', 0.2]]))
-                .mockReturnValueOnce(new Map([['file1.ts', 0.8]]));
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.1, impactRatio: 0.1, churn: 0, circularDependency: 0, hotspotScore: 0.2 }]]))
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.9, impactRatio: 0.9, churn: 0, circularDependency: 0, hotspotScore: 0.8 }]]));
 
             const snapshot1 = createMockSnapshot(
                 [{ path: 'file1.ts', metrics: { centrality: 0.1, coupling: 0.1, churn: 0, circularDependency: 0, riskScore: 0.1 } }],
@@ -663,8 +663,8 @@ describe('DriftEngine - detectDrift', () => {
 
         it('should detect resolved hotspots', () => {
             (computeHotspots as any)
-                .mockReturnValueOnce(new Map([['file1.ts', 0.8]]))
-                .mockReturnValueOnce(new Map([['file1.ts', 0.2]]));
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.9, impactRatio: 0.9, churn: 0, circularDependency: 0, hotspotScore: 0.8 }]]))
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.1, impactRatio: 0.1, churn: 0, circularDependency: 0, hotspotScore: 0.2 }]]));
 
             const snapshot1 = createMockSnapshot(
                 [{ path: 'file1.ts', metrics: { centrality: 0.9, coupling: 0.9, churn: 0, circularDependency: 0, riskScore: 0.9 } }],
@@ -691,8 +691,8 @@ describe('DriftEngine - detectDrift', () => {
 
         it('should use custom hotspot threshold', () => {
             (computeHotspots as any)
-                .mockReturnValueOnce(new Map([['file1.ts', 0.3]]))
-                .mockReturnValueOnce(new Map([['file1.ts', 0.5]]));
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.3, impactRatio: 0.3, churn: 0, circularDependency: 0, hotspotScore: 0.3 }]]))
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.5, impactRatio: 0.5, churn: 0, circularDependency: 0, hotspotScore: 0.5 }]]));
 
             const snapshot1 = createMockSnapshot([{ path: 'file1.ts' }], []);
             const snapshot2 = createMockSnapshot([{ path: 'file1.ts' }], []);
@@ -709,8 +709,8 @@ describe('DriftEngine - detectDrift', () => {
 
         it('should handle files that remain hotspots', () => {
             (computeHotspots as any)
-                .mockReturnValueOnce(new Map([['file1.ts', 0.8]]))
-                .mockReturnValueOnce(new Map([['file1.ts', 0.9]]));
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.8, impactRatio: 0.8, churn: 0, circularDependency: 0, hotspotScore: 0.8 }]]))
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.9, impactRatio: 0.9, churn: 0, circularDependency: 0, hotspotScore: 0.9 }]]));
 
             const snapshot1 = createMockSnapshot([{ path: 'file1.ts' }], []);
             const snapshot2 = createMockSnapshot([{ path: 'file1.ts' }], []);
@@ -728,8 +728,8 @@ describe('DriftEngine - detectDrift', () => {
 
         it('should handle files that remain non-hotspots', () => {
             (computeHotspots as any)
-                .mockReturnValueOnce(new Map([['file1.ts', 0.1]]))
-                .mockReturnValueOnce(new Map([['file1.ts', 0.15]]));
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.1, impactRatio: 0.1, churn: 0, circularDependency: 0, hotspotScore: 0.1 }]]))
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.15, impactRatio: 0.15, churn: 0, circularDependency: 0, hotspotScore: 0.15 }]]));
 
             const snapshot1 = createMockSnapshot([{ path: 'file1.ts' }], []);
             const snapshot2 = createMockSnapshot([{ path: 'file1.ts' }], []);
@@ -748,7 +748,7 @@ describe('DriftEngine - detectDrift', () => {
         it('should handle new files in current snapshot', () => {
             (computeHotspots as any)
                 .mockReturnValueOnce(new Map([]))
-                .mockReturnValueOnce(new Map([['file2.ts', 0.8]]));
+                .mockReturnValueOnce(new Map([['file2.ts', { file: 'file2.ts', riskScore: 0.8, impactRatio: 0.8, churn: 0, circularDependency: 0, hotspotScore: 0.8 }]]));
 
             const snapshot1 = createMockSnapshot([{ path: 'file1.ts' }], []);
             const snapshot2 = createMockSnapshot(
@@ -770,8 +770,11 @@ describe('DriftEngine - detectDrift', () => {
 
         it('should handle removed files in current snapshot', () => {
             (computeHotspots as any)
-                .mockReturnValueOnce(new Map([['file1.ts', 0.1], ['file2.ts', 0.8]]))
-                .mockReturnValueOnce(new Map([['file1.ts', 0.1]]));
+                .mockReturnValueOnce(new Map([
+                    ['file1.ts', { file: 'file1.ts', riskScore: 0.1, impactRatio: 0.1, churn: 0, circularDependency: 0, hotspotScore: 0.1 }],
+                    ['file2.ts', { file: 'file2.ts', riskScore: 0.8, impactRatio: 0.8, churn: 0, circularDependency: 0, hotspotScore: 0.8 }]
+                ]))
+                .mockReturnValueOnce(new Map([['file1.ts', { file: 'file1.ts', riskScore: 0.1, impactRatio: 0.1, churn: 0, circularDependency: 0, hotspotScore: 0.1 }]]));
 
             const snapshot1 = createMockSnapshot(
                 [{ path: 'file1.ts' }, { path: 'file2.ts' }],
@@ -794,14 +797,14 @@ describe('DriftEngine - detectDrift', () => {
         it('should handle multiple hotspot changes', () => {
             (computeHotspots as any)
                 .mockReturnValueOnce(new Map([
-                    ['file1.ts', 0.8],
-                    ['file2.ts', 0.1],
-                    ['file3.ts', 0.9]
+                    ['file1.ts', { file: 'file1.ts', riskScore: 0.8, impactRatio: 0.8, churn: 0, circularDependency: 0, hotspotScore: 0.8 }],
+                    ['file2.ts', { file: 'file2.ts', riskScore: 0.1, impactRatio: 0.1, churn: 0, circularDependency: 0, hotspotScore: 0.1 }],
+                    ['file3.ts', { file: 'file3.ts', riskScore: 0.9, impactRatio: 0.9, churn: 0, circularDependency: 0, hotspotScore: 0.9 }]
                 ]))
                 .mockReturnValueOnce(new Map([
-                    ['file1.ts', 0.2],
-                    ['file2.ts', 0.9],
-                    ['file3.ts', 0.85]
+                    ['file1.ts', { file: 'file1.ts', riskScore: 0.2, impactRatio: 0.2, churn: 0, circularDependency: 0, hotspotScore: 0.2 }],
+                    ['file2.ts', { file: 'file2.ts', riskScore: 0.9, impactRatio: 0.9, churn: 0, circularDependency: 0, hotspotScore: 0.9 }],
+                    ['file3.ts', { file: 'file3.ts', riskScore: 0.85, impactRatio: 0.85, churn: 0, circularDependency: 0, hotspotScore: 0.85 }]
                 ]));
 
             const snapshot1 = createMockSnapshot(
@@ -845,12 +848,12 @@ describe('DriftEngine - detectDrift', () => {
 
             (computeHotspots as any)
                 .mockReturnValueOnce(new Map([
-                    ['src/api.ts', 0.2],
-                    ['src/utils.ts', 0.9]
+                    ['src/api.ts', { file: 'src/api.ts', riskScore: 0.2, impactRatio: 0.2, churn: 0, circularDependency: 0, hotspotScore: 0.2 }],
+                    ['src/utils.ts', { file: 'src/utils.ts', riskScore: 0.9, impactRatio: 0.9, churn: 0, circularDependency: 0, hotspotScore: 0.9 }]
                 ]))
                 .mockReturnValueOnce(new Map([
-                    ['src/api.ts', 0.8],
-                    ['src/utils.ts', 0.2]
+                    ['src/api.ts', { file: 'src/api.ts', riskScore: 0.8, impactRatio: 0.8, churn: 0, circularDependency: 0, hotspotScore: 0.8 }],
+                    ['src/utils.ts', { file: 'src/utils.ts', riskScore: 0.2, impactRatio: 0.2, churn: 0, circularDependency: 0, hotspotScore: 0.2 }]
                 ]));
 
             const snapshot1 = createMockSnapshot(
