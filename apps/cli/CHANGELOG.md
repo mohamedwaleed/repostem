@@ -1,5 +1,14 @@
 # @repostem/cli
 
+## 0.1.7
+
+### Patch Changes
+
+- Add hotspot command to identify architectural hotspots
+- Enhance hotspot output with classification labels (Low/Medium/High) and color coding
+- Updated dependencies
+  - @repostem/engine@0.1.7
+
 ## 0.1.6
 
 ### Patch Changes

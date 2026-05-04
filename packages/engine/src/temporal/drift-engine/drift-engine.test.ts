@@ -3,7 +3,7 @@ import { detectDrift } from './drift-engine';
 import { SnapshotAggregate, FileMetrics, MetricClassification } from '../../types';
 import { buildDependencyGraphFromSnapshot } from '../../core/dependency-graph/dependency-graph';
 import { computeImpact } from '../../core/impact-engine/impact-engine';
-import { computeHotspotScores } from '../../core/hostspot-engine/hostspot-engine';
+import { computeHotspots } from '../../core/hostspot-engine/hostspot-engine';
 import { calculateComplexityScore } from '../../repository-metrics/complexity-score';
 
 // Mock external dependencies
@@ -103,7 +103,7 @@ describe('DriftEngine - detectDrift', () => {
             impactRatio: 0
         });
         
-        (computeHotspotScores as any).mockReturnValue(new Map());
+        (computeHotspots as any).mockReturnValue(new Map());
         
         (calculateComplexityScore as any).mockReturnValue(0.5);
     });
@@ -634,7 +634,7 @@ describe('DriftEngine - detectDrift', () => {
 
     describe('detectHotspotChanges', () => {
         it('should detect new hotspots', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([['file1.ts', 0.2]]))
                 .mockReturnValueOnce(new Map([['file1.ts', 0.8]]));
 
@@ -662,7 +662,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should detect resolved hotspots', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([['file1.ts', 0.8]]))
                 .mockReturnValueOnce(new Map([['file1.ts', 0.2]]));
 
@@ -690,7 +690,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should use custom hotspot threshold', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([['file1.ts', 0.3]]))
                 .mockReturnValueOnce(new Map([['file1.ts', 0.5]]));
 
@@ -708,7 +708,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should handle files that remain hotspots', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([['file1.ts', 0.8]]))
                 .mockReturnValueOnce(new Map([['file1.ts', 0.9]]));
 
@@ -727,7 +727,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should handle files that remain non-hotspots', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([['file1.ts', 0.1]]))
                 .mockReturnValueOnce(new Map([['file1.ts', 0.15]]));
 
@@ -746,7 +746,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should handle new files in current snapshot', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([]))
                 .mockReturnValueOnce(new Map([['file2.ts', 0.8]]));
 
@@ -769,7 +769,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should handle removed files in current snapshot', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([['file1.ts', 0.1], ['file2.ts', 0.8]]))
                 .mockReturnValueOnce(new Map([['file1.ts', 0.1]]));
 
@@ -792,7 +792,7 @@ describe('DriftEngine - detectDrift', () => {
         });
 
         it('should handle multiple hotspot changes', () => {
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([
                     ['file1.ts', 0.8],
                     ['file2.ts', 0.1],
@@ -843,7 +843,7 @@ describe('DriftEngine - detectDrift', () => {
                 .mockReturnValueOnce({ file: 'src/utils.ts', impactRatio: 0.1, directDependents: [], transitiveDependents: [], totalImpactCount: 1 })
                 .mockReturnValueOnce({ file: 'src/db.ts', impactRatio: 0.1, directDependents: [], transitiveDependents: [], totalImpactCount: 1 });
 
-            (computeHotspotScores as any)
+            (computeHotspots as any)
                 .mockReturnValueOnce(new Map([
                     ['src/api.ts', 0.2],
                     ['src/utils.ts', 0.9]
@@ -930,7 +930,7 @@ describe('DriftEngine - detectDrift', () => {
                 totalImpactCount: 5 
             });
 
-            (computeHotspotScores as any).mockReturnValue(new Map([['file1.ts', 0.5]]));
+            (computeHotspots as any).mockReturnValue(new Map([['file1.ts', 0.5]]));
 
             const snapshot = createMockSnapshot(
                 [{ path: 'file1.ts', riskScore: 0.5 }],

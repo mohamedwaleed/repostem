@@ -297,3 +297,12 @@ export interface ServiceContext {
 export interface DriftServiceOptions extends ServiceOptions {
   since?: string; // snapshot ID
 }
+
+export interface Hotspot {
+  file: string;
+  riskScore: number;
+  impactRatio: number;
+  churn: number;
+  circularDependency: number;
+  hotspotScore: number;
+}

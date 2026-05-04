@@ -1,6 +1,7 @@
 import { outputGeneric, OutputFormat, parseOutputFormat, getBanner, printBanner } from "./generic-output";
 import { enrichProjectAnalysis } from "./analysis-presenter";
 import chalk from 'chalk';
+import { classify, MetricClassification } from '@repostem/engine';
 
 export { getBanner, printBanner };
 
@@ -152,25 +153,39 @@ export function outputDrift(result: any, format: OutputFormat = OutputFormat.TEX
   lines.push('');
   lines.push(chalk.bold.hex('#FF6B6B')('Hotspot Changes:'));
   
+  const maxDisplayHotspots = 5;
+  
   if (result.hotspotChanges?.newHotspots?.length > 0) {
     lines.push('');
     lines.push(chalk.red('New Hotspots:'));
-    for (const hotspot of result.hotspotChanges.newHotspots) {
+    const displayCount = Math.min(result.hotspotChanges.newHotspots.length, maxDisplayHotspots);
+    for (let i = 0; i < displayCount; i++) {
+      const hotspot = result.hotspotChanges.newHotspots[i];
       const delta = hotspot.delta ?? 0;
-      const deltaStr = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
-      lines.push(chalk.red(`  + ${hotspot.file}`));
-      lines.push(chalk.gray(`    Score: ${(hotspot.previousHotspotScore ?? 0).toFixed(2)} → ${(hotspot.currentHotspotScore ?? 0).toFixed(2)} (${deltaStr})`));
+      const deltaStr = delta > 0 ? `+${delta.toFixed(3)}` : delta.toFixed(3);
+      lines.push(chalk.red(`+ ${hotspot.file}  (${deltaStr})`));
+    }
+    const remaining = result.hotspotChanges.newHotspots.length - maxDisplayHotspots;
+    if (remaining > 0) {
+      lines.push('');
+      lines.push(chalk.gray(`(+${remaining} more files entered hotspot zone)`));
     }
   }
   
   if (result.hotspotChanges?.resolvedHotspots?.length > 0) {
     lines.push('');
     lines.push(chalk.green('Resolved Hotspots:'));
-    for (const hotspot of result.hotspotChanges.resolvedHotspots) {
+    const displayCount = Math.min(result.hotspotChanges.resolvedHotspots.length, maxDisplayHotspots);
+    for (let i = 0; i < displayCount; i++) {
+      const hotspot = result.hotspotChanges.resolvedHotspots[i];
       const delta = hotspot.delta ?? 0;
-      const deltaStr = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
-      lines.push(chalk.green(`  - ${hotspot.file}`));
-      lines.push(chalk.gray(`    Score: ${(hotspot.previousHotspotScore ?? 0).toFixed(2)} → ${(hotspot.currentHotspotScore ?? 0).toFixed(2)} (${deltaStr})`));
+      const deltaStr = delta > 0 ? `+${delta.toFixed(3)}` : delta.toFixed(3);
+      lines.push(chalk.green(`- ${hotspot.file}  (${deltaStr})`));
+    }
+    const remaining = result.hotspotChanges.resolvedHotspots.length - maxDisplayHotspots;
+    if (remaining > 0) {
+      lines.push('');
+      lines.push(chalk.gray(`(+${remaining} more files exited hotspot zone)`));
     }
   }
   
@@ -211,8 +226,10 @@ function generateDriftSummary(result: any): string[] {
   
   const impactIncreased = result.impactChanges?.increasedCount ?? 0;
   const impactDecreased = result.impactChanges?.decreasedCount ?? 0;
-  if (impactIncreased > 0) {
+  if (impactIncreased > impactDecreased) {
     signals.push('- Blast radius is growing');
+  } else if (impactDecreased > impactIncreased) {
+    signals.push('- Blast radius is shrinking');
   }
   
   const newCycles = result.cycleChanges?.newCycles?.length ?? 0;
@@ -226,6 +243,15 @@ function generateDriftSummary(result: any): string[] {
   const newEdges = result.dependencyChanges?.newEdges ?? 0;
   if (newEdges > 100) {
     signals.push('- Significant structural changes detected');
+  }
+  
+  const newHotspots = result.hotspotChanges?.newHotspots?.length ?? 0;
+  const resolvedHotspots = result.hotspotChanges?.resolvedHotspots?.length ?? 0;
+  if (newHotspots > 0) {
+    signals.push(`- ${newHotspots} new architectural hotspots detected`);
+  }
+  if (resolvedHotspots > 0) {
+    signals.push(`- ${resolvedHotspots} hotspots resolved`);
   }
   
   if (signals.length === 0) {
@@ -297,6 +323,76 @@ export function outputSnapshotHistory(snapshots: any, format: OutputFormat = Out
     ];
     formatSimpleTable(snapshots, headers);
   }
+}
+
+export function outputHotspot(hotspots: any[], format: OutputFormat = OutputFormat.TEXT): void {
+  if (format === OutputFormat.JSON) {
+    const hotspotArray = hotspots.map((hotspot) => ({
+      file: hotspot.file,
+      ...hotspot
+    }));
+    console.log(JSON.stringify(hotspotArray, null, 2));
+    return;
+  }
+
+  console.log(getBanner());
+  
+  const lines: string[] = [];
+  
+  // Header
+  lines.push(chalk.bold.hex('#FF6B6B')('=== Architectural Hotspots (Current Snapshot) ==='));
+  lines.push('');
+  
+  if (hotspots.length === 0) {
+    lines.push(chalk.gray('No hotspots detected'));
+    console.log(lines.join('\n'));
+    return;
+  }
+  
+  // Display all hotspots
+  for (let i = 0; i < hotspots.length; i++) {
+    const hotspot = hotspots[i];
+    const index = i + 1;
+    
+    lines.push(chalk.bold.white(`${index}. ${hotspot.file}`));
+    
+    // Risk with classification
+    const riskLevel = classify(hotspot.riskScore);
+    const riskColor = riskLevel === MetricClassification.HIGH ? chalk.red : 
+                      riskLevel === MetricClassification.MEDIUM ? chalk.yellow : chalk.green;
+    lines.push(chalk.gray(`   - Risk: ${riskColor(capitalize(riskLevel))} (${hotspot.riskScore.toFixed(2)})`));
+    
+    // Impact as percentage
+    const impactPct = (hotspot.impactRatio * 100).toFixed(1);
+    lines.push(chalk.gray(`   - Impact: ${impactPct}%`));
+    
+    // Churn with classification
+    const churnLevel = classify(hotspot.churn);
+    const churnColor = churnLevel === MetricClassification.HIGH ? chalk.red : 
+                       churnLevel === MetricClassification.MEDIUM ? chalk.yellow : chalk.gray;
+    lines.push(chalk.gray(`   - Churn: ${churnColor(capitalize(churnLevel))} (${hotspot.churn.toFixed(2)})`));
+    
+    // Circular dependency
+    if (hotspot.circularDependency > 0) {
+      lines.push(chalk.red(`   - Circular Dependency: Yes`));
+    }
+    
+    // Hotspot score with classification
+    const hotspotLevel = classify(hotspot.hotspotScore);
+    const hotspotColor = hotspotLevel === MetricClassification.HIGH ? chalk.red : 
+                         hotspotLevel === MetricClassification.MEDIUM ? chalk.yellow : chalk.green;
+    lines.push(chalk.gray(`   - Hotspot Score: ${hotspotColor(capitalize(hotspotLevel))} (${hotspot.hotspotScore.toFixed(2)})`));
+    
+    if (i < hotspots.length - 1) {
+      lines.push('');
+    }
+  }
+  
+  console.log(lines.join('\n'));
+}
+
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export { OutputFormat, parseOutputFormat };

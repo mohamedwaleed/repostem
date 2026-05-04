@@ -26,3 +26,7 @@ export {
   isRepoInitialized,
   resetPersistence
 } from './init-service';
+
+export {
+  calculateHotspots
+} from './hotspot-service';
