@@ -1,5 +1,11 @@
 import { classify, getMetricLabel, MetricClassification } from "@repostem/engine";
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+const packageJson = JSON.parse(
+  readFileSync(join(__dirname, '../../package.json'), 'utf-8')
+);
 
 export function getBanner(): string {
   return [
@@ -10,7 +16,7 @@ export function getBanner(): string {
     chalk.bold.cyan('|  _ <| |___|  __/| |_| |___) || | | |___| |  | |'),
     chalk.bold.cyan('|_| \\_\\_____|_|    \\___/|____/ |_| |_____|_|  |_|'),
     '',
-    chalk.gray('  Structural Risk Analysis Tool'),
+    chalk.gray(`  Structural Risk Analysis Tool (v${packageJson.version})`),
     ''
   ].join('\n');
 }
