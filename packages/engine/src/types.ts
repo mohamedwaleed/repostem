@@ -298,6 +298,10 @@ export interface DriftServiceOptions extends ServiceOptions {
   since?: string; // snapshot ID
 }
 
+export interface HotspotTrendServiceOptions extends ServiceOptions {
+  since?: string; // snapshot ID
+}
+
 export interface Hotspot {
   file: string;
   riskScore: number;
@@ -305,4 +309,15 @@ export interface Hotspot {
   churn: number;
   circularDependency: number;
   hotspotScore: number;
+}
+
+export interface HotspotTrendItem {
+  file: string;
+  previousRiskScore: number;
+  currentRiskScore: number;
+  riskDelta: number;
+  previousImpactRatio: number;
+  currentImpactRatio: number;
+  impactDelta: number;
+  trendScore: number;
 }

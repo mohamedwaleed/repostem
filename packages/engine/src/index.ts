@@ -14,6 +14,9 @@ export {
     DriftResult,
     getSnapshotHistory,
     calculateHotspots,
+    calculateHotspotTrends,
+    HotspotTrendItem,
+    HotspotTrendServiceOptions,
 } from './application';
 
 // Utilities

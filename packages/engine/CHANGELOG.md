@@ -1,5 +1,14 @@
 # @repostem/engine
 
+## 0.1.8
+
+### Patch Changes
+
+- Add hotspot trend engine to compute trend scores from snapshot comparisons
+- Add hotspot-trend-service to load snapshots and calculate hotspot trends
+- Add HotspotTrendItem and HotspotTrendServiceOptions types
+- Export calculateHotspotTrends service and related types
+
 ## 0.1.7
 
 ### Patch Changes

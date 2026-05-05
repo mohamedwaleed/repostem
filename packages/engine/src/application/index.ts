@@ -30,3 +30,9 @@ export {
 export {
   calculateHotspots
 } from './hotspot-service';
+
+export {
+  calculateHotspotTrends
+} from './hotspot-trend-service';
+export { HotspotTrendItem } from '../types';
+export { HotspotTrendServiceOptions } from '../types';

@@ -94,6 +94,12 @@ repostem hotspot -r /path/to/repo
 
 # Hotspots with JSON output
 repostem hotspot -o json
+
+# Show hotspot trends over time
+repostem hotspot --trend
+
+# Compare hotspots with a specific snapshot
+repostem hotspot --trend --since <snapshot-id>
 ```
 
 ### Detect Architectural Drift
@@ -274,6 +280,10 @@ repostem hotspot [options]
 **Options:**
 - `-r, --repo <path>`: Path to repository (default: current directory)
 - `-o, --output <format>`: Output format - `text`, `json` (default: `text`)
+- `--trend`: Show hotspot evolution over time (requires at least 2 snapshots)
+- `--since <snapshotId>`: Compare with specific snapshot (only with --trend)
+- `--branch <name>`: Filter snapshots by branch (only with --trend)
+- `--no-branch-filter`: Disable branch filtering (only with --trend)
 
 **Output includes:**
 - Risk score with classification (Low/Medium/High)
@@ -281,6 +291,11 @@ repostem hotspot [options]
 - Churn score with classification
 - Circular dependency indicator
 - Overall hotspot score with classification
+
+**Trend output includes:**
+- Previous and current risk scores with delta
+- Previous and current impact ratios with delta
+- Trend score with classification (Low/Medium/High)
 
 **Example:**
 ```bash
@@ -292,6 +307,18 @@ repostem hotspot -r /path/to/repo
 
 # JSON output for integration
 repostem hotspot -o json
+
+# Show hotspot trends over time
+repostem hotspot --trend
+
+# Compare hotspots with a specific snapshot
+repostem hotspot --trend --since 69b34f51-0ece-4072-b943-83f27328be84
+
+# Trend analysis for a specific branch
+repostem hotspot --trend --branch main
+
+# Trend analysis across all branches
+repostem hotspot --trend --no-branch-filter
 ```
 
 ### `ask`

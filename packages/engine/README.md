@@ -8,6 +8,10 @@ AI-powered structural risk analysis engine for code repositories. Parse reposito
 - **Structural Metrics**: Compute centrality, coupling, churn, and circular dependency detection
 - **Risk Scoring**: Calculate weighted risk scores to identify fragile files
 - **Impact Analysis**: Determine which files are affected by changes to a specific file
+- **Hotspot Detection**: Identify architectural hotspots with high risk and impact
+- **Hotspot Trend Analysis**: Track hotspot evolution over time across snapshots
+- **Architectural Drift Detection**: Compare structural metrics across snapshots
+- **Snapshot Persistence**: Store and retrieve repository analysis snapshots
 - **Cycle Detection**: Identify circular dependencies in your codebase
 - **AI-Powered Explanations**: Get natural language explanations of risk and impact analysis
 - **Multi-Language Support**: Currently supports JavaScript and TypeScript (extensible architecture)
@@ -25,7 +29,13 @@ yarn add @repostem/engine
 ## Quick Start
 
 ```typescript
-import { analyzeRepository, analyzeFileRisk, computeFileImpact } from '@repostem/engine';
+import {
+  analyzeRepository,
+  analyzeFileRisk,
+  computeFileImpact,
+  calculateHotspots,
+  calculateHotspotTrends
+} from '@repostem/engine';
 
 // Analyze entire repository
 const analysis = await analyzeRepository('/path/to/your/repo');
@@ -40,6 +50,14 @@ console.log(`Centrality: ${risk.centrality}`);
 // Compute file impact
 const impact = await computeFileImpact('/path/to/your/repo', 'src/core/service.ts');
 console.log(`Files affected: ${impact.totalImpactCount}`);
+
+// Identify architectural hotspots
+const hotspots = await calculateHotspots('/path/to/your/repo');
+console.log(`Top hotspots:`, hotspots);
+
+// Track hotspot evolution over time
+const trends = await calculateHotspotTrends('/path/to/your/repo');
+console.log(`Trending hotspots:`, trends);
 ```
 
 ## API Reference
@@ -174,6 +192,101 @@ const result = await resetPersistence('/path/to/repo');
 }
 ```
 
+### `calculateHotspots(repoPath: string, options?: HotspotServiceOptions)`
+
+Identify architectural hotspots - files with high structural risk and impact that warrant attention.
+
+```typescript
+import { calculateHotspots, Hotspot } from '@repostem/engine';
+
+const hotspots = await calculateHotspots('/path/to/repo');
+
+// Returns: Hotspot[]
+{
+  file: string;
+  riskScore: number;
+  impactRatio: number;
+  churn: number;
+  circularDependency: number;
+  hotspotScore: number;
+}
+```
+
+**Options:**
+- `threshold`: Minimum hotspot score to include (default: 0.35)
+- `limit`: Maximum number of hotspots to return (default: 5)
+
+### `calculateHotspotTrends(repoPath: string, options?: HotspotTrendServiceOptions, trendThreshold?: number, limit?: number)`
+
+Track hotspot evolution over time by comparing two snapshots.
+
+```typescript
+import { calculateHotspotTrends, HotspotTrendItem, HotspotTrendServiceOptions } from '@repostem/engine';
+
+const trends = await calculateHotspotTrends('/path/to/repo', {
+  since: 'snapshot-id', // optional: compare with specific snapshot
+  branch: 'main',       // optional: filter by branch
+  noBranchFilter: false // optional: disable branch filtering
+}, 0.05, 5);
+
+// Returns: HotspotTrendItem[]
+{
+  file: string;
+  previousRiskScore: number;
+  currentRiskScore: number;
+  riskDelta: number;
+  previousImpactRatio: number;
+  currentImpactRatio: number;
+  impactDelta: number;
+  trendScore: number;
+}
+```
+
+**Options:**
+- `since`: Snapshot ID to compare against
+- `branch`: Filter snapshots by branch
+- `noBranchFilter`: Disable branch filtering
+
+**Parameters:**
+- `trendThreshold`: Minimum trend score to include (default: 0.05)
+- `limit`: Maximum number of trending hotspots to return (default: 5)
+
+### `detectDrift(repoPath: string, options?: DriftServiceOptions)`
+
+Detect architectural drift between snapshots by comparing structural metrics.
+
+```typescript
+import { detectDrift, DriftServiceOptions } from '@repostem/engine';
+
+const drift = await detectDrift('/path/to/repo', {
+  since: 'snapshot-id', // optional: compare with specific snapshot
+  branch: 'main',       // optional: filter by branch
+  noBranchFilter: false // optional: disable branch filtering
+});
+```
+
+**Options:**
+- `since`: Snapshot ID to compare against
+- `branch`: Filter snapshots by branch
+- `noBranchFilter`: Disable branch filtering
+
+### `getSnapshotHistory(repoPath: string, options?: HistoryServiceOptions)`
+
+View snapshot history for a repository.
+
+```typescript
+import { getSnapshotHistory, HistoryServiceOptions } from '@repostem/engine';
+
+const history = await getSnapshotHistory('/path/to/repo', {
+  branch: 'main',       // optional: filter by branch
+  noBranchFilter: false // optional: disable branch filtering
+});
+```
+
+**Options:**
+- `branch`: Filter snapshots by branch
+- `noBranchFilter`: Disable branch filtering
+
 ## Metrics Explained
 
 ### Centrality
@@ -204,6 +317,30 @@ Weighted combination of metrics to identify fragile code.
 - 0.0 - 0.3: Low structural risk
 - 0.3 - 0.6: Moderate structural risk
 - 0.6 - 1.0: High structural risk
+
+### Hotspot Score
+Combined metric that identifies files with high risk and high impact that warrant attention.
+
+- **Range**: 0.0 - 1.0
+- **Formula**: `(riskScore * 0.5) + (normalizedImpactRatio * 0.3) + (churn * 0.15) + cycleBonus`
+- **cycleBonus**: 0.05 if file is in a cycle, otherwise 0
+
+**Interpretation**:
+- Files with hotspot score > 0.35 are considered architectural hotspots
+- Higher scores indicate files that are both risky and have high impact
+
+### Trend Score
+Measures the evolution of a file's hotspot status between two snapshots.
+
+- **Range**: 0.0 - 1.0
+- **Formula**: `(riskDelta * 0.6) + (normalizedImpactDelta * 0.4)`
+- **riskDelta**: Change in risk score between snapshots
+- **normalizedImpactDelta**: Impact delta normalized to 0-1 range
+
+**Interpretation**:
+- Higher trend scores indicate files becoming more problematic
+- Positive values indicate increasing risk/impact
+- Used to identify emerging hotspots
 
 ## Configuration
 

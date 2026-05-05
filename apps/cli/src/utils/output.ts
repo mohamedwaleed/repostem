@@ -391,6 +391,66 @@ export function outputHotspot(hotspots: any[], format: OutputFormat = OutputForm
   console.log(lines.join('\n'));
 }
 
+export function outputHotspotTrend(trends: any[], format: OutputFormat = OutputFormat.TEXT): void {
+  if (format === OutputFormat.JSON) {
+    const trendArray = trends.map((trend) => ({
+      file: trend.file,
+      ...trend
+    }));
+    console.log(JSON.stringify(trendArray, null, 2));
+    return;
+  }
+
+  console.log(getBanner());
+  
+  const lines: string[] = [];
+  
+  lines.push(chalk.bold.hex('#FF6B6B')('=== Architectural Hotspots (Trending) ==='));
+  lines.push('');
+  
+  if (trends.length === 0) {
+    lines.push(chalk.gray('No trending hotspots detected'));
+    console.log(lines.join('\n'));
+    return;
+  }
+  
+  for (let i = 0; i < trends.length; i++) {
+    const trend = trends[i];
+    const index = i + 1;
+    
+    lines.push(chalk.bold.white(`${index}. ${trend.file}`));
+    
+    const riskDeltaFormatted = trend.riskDelta >= 0 
+      ? chalk.red(`+${trend.riskDelta.toFixed(2)}`)
+      : chalk.green(`${trend.riskDelta.toFixed(2)}`);
+    lines.push(chalk.gray(`   Risk: ${trend.previousRiskScore.toFixed(2)} → ${trend.currentRiskScore.toFixed(2)} (${riskDeltaFormatted})`));
+    
+    const impactDeltaPct = (trend.impactDelta * 100).toFixed(1);
+    const prevImpactPct = (trend.previousImpactRatio * 100).toFixed(1);
+    const currImpactPct = (trend.currentImpactRatio * 100).toFixed(1);
+    
+    if (Math.abs(trend.impactDelta) > 0.01) {
+      const impactDeltaFormatted = trend.impactDelta >= 0 
+        ? chalk.red(`+${impactDeltaPct}%`)
+        : chalk.green(`${impactDeltaPct}%`);
+      lines.push(chalk.gray(`   Impact: ${prevImpactPct}% → ${currImpactPct}% (${impactDeltaFormatted})`));
+    } else {
+      lines.push(chalk.gray(`   Impact: stable at ${currImpactPct}%`));
+    }
+    
+    const trendScoreLevel = classify(trend.trendScore);
+    const trendScoreColor = trendScoreLevel === MetricClassification.HIGH ? chalk.red : 
+                             trendScoreLevel === MetricClassification.MEDIUM ? chalk.yellow : chalk.green;
+    lines.push(chalk.gray(`   Trend Score: ${trendScoreColor(capitalize(trendScoreLevel))} (${trend.trendScore.toFixed(2)})`));
+    
+    if (i < trends.length - 1) {
+      lines.push('');
+    }
+  }
+  
+  console.log(lines.join('\n'));
+}
+
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }

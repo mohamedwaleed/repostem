@@ -41,7 +41,7 @@ RepoStem aims to evolve into an AI Project Brain — a persistent cognition laye
 - `analyze` - Full repository analysis with dependency graph
 - `drift` - Detect architectural drift between snapshots
 - `history` - View snapshot history
-- `hotspot` - Identify architectural hotspots (files with high risk and impact)
+- `hotspot` - Identify architectural hotspots (files with high risk and impact); use --trend to track evolution over time
 - `risk` - Risk metrics and scoring for all files
 - `cycles` - Detect and report circular dependencies
 - `impact` - Analyze impact of changing specific files

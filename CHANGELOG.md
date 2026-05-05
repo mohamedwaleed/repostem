@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Add hotspot trend analysis with --trend flag to track hotspot evolution over time
+- Add --since, --branch, and --no-branch-filter options for hotspot trend analysis
 - Implement repostem drift command for architectural drift detection (#25)
 - Implement repostem history command (#19)
 - Implement repostem hotspot command to identify architectural hotspots

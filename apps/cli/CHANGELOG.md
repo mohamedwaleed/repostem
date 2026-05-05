@@ -1,5 +1,14 @@
 # @repostem/cli
 
+## 0.1.8
+
+### Patch Changes
+
+- Add hotspot trend analysis with --trend flag to track hotspot evolution over time
+- Add --since, --branch, and --no-branch-filter options for hotspot trend analysis
+- Updated dependencies
+  - @repostem/engine@0.1.8
+
 ## 0.1.7
 
 ### Patch Changes
