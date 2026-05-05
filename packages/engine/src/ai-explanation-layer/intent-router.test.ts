@@ -105,6 +105,98 @@ describe('detectIntent', () => {
   it('should detect impact when keyword is part of a larger word', () => {
     expect(detectIntent('What is the impact analysis?')).toBe('impact');
   });
+
+  // Trend intent tests
+  it('should detect trend intent with "trend" keyword', () => {
+    expect(detectIntent('What is the trend for this file?')).toBe('fileTrend');
+  });
+
+  it('should detect trend intent with "getting worse" keyword', () => {
+    expect(detectIntent('Is this file getting worse?')).toBe('fileTrend');
+  });
+
+  it('should detect trend intent with "increasing" keyword', () => {
+    expect(detectIntent('Is the risk increasing?')).toBe('fileTrend');
+  });
+
+  it('should detect trend intent with "decreasing" keyword', () => {
+    expect(detectIntent('Is the risk decreasing?')).toBe('fileTrend');
+  });
+
+  it('should detect trend intent with "evolving" keyword', () => {
+    expect(detectIntent('How is this file evolving?')).toBe('fileTrend');
+  });
+
+  it('should detect trend intent with "evolution" keyword', () => {
+    expect(detectIntent('What is the evolution of this file?')).toBe('fileTrend');
+  });
+
+  // Drift intent tests
+  it('should detect drift intent with "drift" keyword', () => {
+    expect(detectIntent('What is the drift in the codebase?')).toBe('driftSummary');
+  });
+
+  it('should detect drift intent with "changed" keyword', () => {
+    expect(detectIntent('What has changed in the architecture?')).toBe('driftSummary');
+  });
+
+  it('should detect drift intent with "changes" keyword', () => {
+    expect(detectIntent('What changes have occurred?')).toBe('driftSummary');
+  });
+
+  it('should detect drift intent with "difference" keyword', () => {
+    expect(detectIntent('What is the difference between snapshots?')).toBe('driftSummary');
+  });
+
+  it('should detect drift intent with "compare" keyword', () => {
+    expect(detectIntent('Compare the current state with previous')).toBe('driftSummary');
+  });
+
+  // Hotspot intent tests
+  it('should detect hotspot intent with "hotspot" keyword', () => {
+    expect(detectIntent('What are the hotspots?')).toBe('hotspots');
+  });
+
+  it('should detect hotspot intent with "biggest problem" keyword', () => {
+    expect(detectIntent('What is the biggest problem in the codebase?')).toBe('hotspots');
+  });
+
+  it('should detect hotspot intent with "problematic" keyword', () => {
+    expect(detectIntent('Which files are most problematic?')).toBe('hotspots');
+  });
+
+  it('should detect hotspot intent with "worst" keyword', () => {
+    expect(detectIntent('What are the worst files?')).toBe('hotspots');
+  });
+
+  it('should detect hotspot intent with "most critical" keyword', () => {
+    expect(detectIntent('What are the most critical files?')).toBe('hotspots');
+  });
+
+  // Priority tests - trend should be detected before drift, hotspot, risk, and impact
+  it('should prioritize trend keywords over drift keywords', () => {
+    expect(detectIntent('What is the trend of drift?')).toBe('fileTrend');
+  });
+
+  it('should prioritize trend keywords over hotspot keywords', () => {
+    expect(detectIntent('What is the trend of hotspots?')).toBe('fileTrend');
+  });
+
+  it('should prioritize trend keywords over risk keywords', () => {
+    expect(detectIntent('What is the risk trend?')).toBe('fileTrend');
+  });
+
+  it('should prioritize drift keywords over hotspot keywords', () => {
+    expect(detectIntent('What are the drift hotspots?')).toBe('driftSummary');
+  });
+
+  it('should prioritize drift keywords over risk keywords', () => {
+    expect(detectIntent('What is the risk drift?')).toBe('driftSummary');
+  });
+
+  it('should prioritize hotspot keywords over risk keywords', () => {
+    expect(detectIntent('What are the risk hotspots?')).toBe('hotspots');
+  });
 });
 
 describe('explainRiskIntent', () => {

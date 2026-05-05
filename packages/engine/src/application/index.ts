@@ -9,7 +9,7 @@ export {
 } from './analyze-service';
 
 // Ask Service
-export { ask } from './ask-service';
+export { ask, AskServiceOptions } from './ask-service';
 
 // Drift Service
 export { detectDrift } from './drift-service';
