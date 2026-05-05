@@ -1,19 +1,21 @@
 # @repostem/engine
 
-AI-powered structural risk analysis engine for code repositories. Parse repositories, build dependency graphs, compute architectural health metrics, and identify fragile code.
+Architectural drift and blast-radius tracking engine for JavaScript/TypeScript repositories. Models repositories as dependency graphs and tracks how their architecture evolves over time, computing structural risk, blast radius, circular dependencies, and emerging hotspots.
 
 ## Features
 
 - **Dependency Graph Analysis**: Build in-memory dependency graphs from repository code
 - **Structural Metrics**: Compute centrality, coupling, churn, and circular dependency detection
 - **Risk Scoring**: Calculate weighted risk scores to identify fragile files
-- **Impact Analysis**: Determine which files are affected by changes to a specific file
+- **Impact Analysis**: Determine which files are affected by changes to a specific file (blast radius)
 - **Hotspot Detection**: Identify architectural hotspots with high risk and impact
 - **Hotspot Trend Analysis**: Track hotspot evolution over time across snapshots
-- **Architectural Drift Detection**: Compare structural metrics across snapshots
-- **Snapshot Persistence**: Store and retrieve repository analysis snapshots
+- **Architectural Drift Detection**: Compare structural metrics across snapshots to identify changes
+- **Snapshot Persistence**: Store and retrieve repository analysis snapshots (SQLite/PostgreSQL)
+- **Branch Filtering**: Analyze snapshots by branch for multi-branch workflows
 - **Cycle Detection**: Identify circular dependencies in your codebase
-- **AI-Powered Explanations**: Get natural language explanations of risk and impact analysis
+- **AI-Powered Explanations**: Get natural language explanations (risk, impact, trend, drift, hotspot queries)
+- **Database Migrations**: Manage storage backend schema updates
 - **Multi-Language Support**: Currently supports JavaScript and TypeScript (extensible architecture)
 
 ## Installation

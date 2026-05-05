@@ -1,15 +1,21 @@
 # RepoStem CLI
 
-A powerful command-line interface for structural risk analysis of JavaScript/TypeScript repositories. RepoStem helps you identify fragile code, architectural hotspots, and potential maintenance risks before they become problems.
+A command-line interface for architectural drift and blast-radius tracking for JavaScript/TypeScript repositories. RepoStem models repositories as dependency graphs and tracks how their architecture evolves over time, surfacing structural risk, blast radius, circular dependencies, and emerging hotspots.
 
 ## 🚀 Features
 
 - **Structural Analysis**: Complete repository-wide dependency graph analysis
-- **Risk Assessment**: File-level risk scoring based on centrality, coupling, churn, and circular dependencies
+- **Risk Scoring**: File-level risk metrics (centrality, coupling, churn, circular dependencies)
 - **Impact Analysis**: Understand the transitive impact of modifying any file
 - **Circular Dependency Detection**: Identify and visualize dependency cycles
-- **AI-Powered Insights**: Get natural language explanations of structural metrics
+- **Snapshot Persistence**: Store and retrieve architectural snapshots over time
+- **Architectural Drift Detection**: Compare snapshots to identify structural changes
+- **Hotspot Identification**: Find files with high risk and impact that need attention
+- **Trend Tracking**: Monitor how hotspots evolve across snapshots
+- **Branch Filtering**: Analyze snapshots by branch for multi-branch workflows
+- **AI-Powered Insights**: Get natural language explanations (risk, impact, trend, drift, hotspot queries)
 - **Multiple Output Formats**: Text, JSON, and table output options
+- **Database Migrations**: Manage storage backend schema updates
 
 ## 📦 Installation
 
@@ -150,6 +156,26 @@ repostem init
 # With flags
 repostem init --storage sqlite --db-path .repostem.db
 repostem init --storage postgresql --db-path postgresql://user:pass@localhost/db
+```
+
+### `migrate`
+Run database migrations for the storage backend. Useful for updating the database schema when RepoStem is upgraded.
+
+```bash
+repostem migrate [options]
+```
+
+**Options:**
+- `-r, --repo <path>`: Path to repository (default: current directory)
+- `--status`: Show migration status without running migrations
+
+**Example:**
+```bash
+# Run migrations
+repostem migrate
+
+# Check migration status
+repostem migrate --status
 ```
 
 ### `analyze`

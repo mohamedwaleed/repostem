@@ -1,8 +1,35 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![CI](https://github.com/mohamedwaleed/repostem/actions/workflows/build-app.yaml/badge.svg) ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue) ![Status](https://img.shields.io/badge/status-experimental-orange)
 
-# RepoStem - AI-powered architecture and structural risk analysis for repositories
+# RepoStem – Architectural drift and blast-radius tracking for JS/TS repositories
 
-RepoStem is a CLI tool that analyzes repositories as dependency graphs, computes architectural risk metrics, and uses AI to explain structural fragility before changes cause damage.
+RepoStem is a structural analysis engine that models a repository as a dependency graph and tracks how its architecture evolves over time.
+
+It surfaces:
+
+- Structural risk (dependency importance, connectivity, churn, cycles)
+- Blast radius (transitive dependents)
+- Circular dependency clusters
+- Architectural drift between snapshots
+- Emerging structural hotspots
+
+RepoStem focuses on structural topology and evolution — not lint rules, formatting, or code style.
+
+AI is used only to explain deterministic structural signals.
+
+## Why RepoStem?
+
+Most tools show what your structure looks like today.
+
+RepoStem shows how it is changing.
+
+## What RepoStem is not
+
+- Not a linter
+- Not a security scanner
+- Not a performance profiler
+- Not a code formatter
+
+It is an architectural evolution tracker.
 
 ## Quick Start
 
@@ -27,25 +54,31 @@ repostem ask /path/to/your/repo "What is the impact of changing src/api/client.j
 ## Vision
 RepoStem aims to evolve into an AI Project Brain — a persistent cognition layer for repositories that understands architecture, evolution, contributor dynamics, and governance patterns to keep software systems healthy over time.
 
-## Current Features (v0.1.0)
+## Current Features (v0.1.6)
 
 ### Core Capabilities
 - **Repository Analysis**: Parse JS/TS repositories and build dependency graphs
 - **Risk Scoring**: Compute structural risk metrics (centrality, coupling, churn, circular dependencies)
 - **Circular Dependency Detection**: Identify problematic dependency cycles
 - **Impact Analysis**: Predict impact of file changes across the codebase
-- **AI-Powered Insights**: Get natural language explanations of architectural issues
+- **Snapshot Persistence**: Store and retrieve architectural snapshots over time
+- **Architectural Drift Detection**: Compare snapshots to identify structural changes
+- **Hotspot Identification**: Find files with high risk and impact that need attention
+- **Trend Tracking**: Monitor how hotspots evolve across snapshots
+- **Branch Filtering**: Analyze snapshots by branch for multi-branch workflows
+- **AI-Powered Insights**: Get natural language explanations of architectural issues (risk, impact, trend, drift, hotspot queries)
 
 ### CLI Commands
 - `init` - Initialize persistence for snapshot storage (SQLite or PostgreSQL)
-- `analyze` - Full repository analysis with dependency graph
-- `drift` - Detect architectural drift between snapshots
-- `history` - View snapshot history
-- `hotspot` - Identify architectural hotspots (files with high risk and impact); use --trend to track evolution over time
+- `migrate` - Run database migrations for storage backend
+- `analyze` - Full repository analysis with dependency graph (auto-persists if initialized)
+- `drift` - Detect architectural drift between snapshots (supports branch filtering)
+- `history` - View snapshot history (supports branch filtering)
+- `hotspot` - Identify architectural hotspots; use --trend to track evolution over time
 - `risk` - Risk metrics and scoring for all files
 - `cycles` - Detect and report circular dependencies
 - `impact` - Analyze impact of changing specific files
-- `ask` - Ask AI questions about your repository architecture
+- `ask` - Ask AI questions about your repository architecture (supports risk, impact, trend, drift, and hotspot queries)
 
 ### Supported Languages
 - JavaScript (.js, .mjs, .cjs)
@@ -77,8 +110,22 @@ export OPENAI_API_KEY=your_openai_api_key_here
 # Set your OpenAI API key
 export OPENAI_API_KEY=sk-...
 
-# Use ask command with AI explanations
-repostem ask /path/to/your/repo "Is src/utils.js fragile?"
+# Risk questions (requires file path)
+repostem ask /path/to/your/repo "What are the risks in src/utils.js?"
+repostem ask /path/to/your/repo "Is src/api/client.js fragile?"
+
+# Impact questions (requires file path)
+repostem ask /path/to/your/repo "What would be the impact of changing src/core/engine.ts?"
+
+# Trend questions (no file path required)
+repostem ask /path/to/your/repo "What is the trend of hotspots?"
+repostem ask /path/to/your/repo "Is the architecture getting worse?"
+
+# Drift questions (no file path required)
+repostem ask /path/to/your/repo "What has changed in the architecture?"
+
+# Hotspot questions (no file path required)
+repostem ask /path/to/your/repo "What are the hotspots?"
 ```
 
 **Note**: The `ask` command will fail without a valid OpenAI API key. Other commands (analyze, risk, cycles, impact) work without AI.
