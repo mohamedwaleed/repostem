@@ -334,11 +334,38 @@ repostem ask <question> [options]
 **Options:**
 - `-r, --repo <path>`: Repository path (default: current directory)
 - `-o, --output <format>`: Output format - `text`, `json`, `table` (default: `text`)
+- `-b, --branch <name>`: Filter by branch (defaults to the current Git branch when in a Git repo)
+- `--no-branch-filter`: Show snapshots from every branch (overrides branch detection)
+- `--since <id>`: Snapshot ID to compare against (from history)
 
-**Important**: The current version has limited support for questions and only recognizes specific keywords:
+**Supported Question Types:**
 
-**Risk-related keywords**: `risk`, `risks`, `threat`, `threats`, `danger`, `hazard`, `fragile`
-**Impact-related keywords**: `impact`, `impacts`, `consequence`, `consequences`, `effect`, `effects`, `result`, `results`
+The `ask` command now supports multiple types of questions:
+
+**Risk-related questions** (requires file path):
+- Keywords: `risk`, `risks`, `threat`, `threats`, `danger`, `hazard`, `fragile`
+- Example: `repostem ask "What are the risks in src/utils.js?"`
+
+**Impact-related questions** (requires file path):
+- Keywords: `impact`, `impacts`, `consequence`, `consequences`, `effect`, `effects`, `result`, `results`
+- Example: `repostem ask "What would be the impact of changing src/core/engine.ts?"`
+
+**Trend questions** (no file path required):
+- Keywords: `trend`, `getting worse`, `increasing`, `decreasing`, `evolving`, `evolution`
+- Example: `repostem ask "What is the trend of hotspots?"`
+- Example: `repostem ask "Is the architecture getting worse?"`
+- Options: Supports `--branch`, `--no-branch-filter`, `--since` for snapshot filtering
+
+**Drift questions** (no file path required):
+- Keywords: `drift`, `changed`, `changes`, `difference`, `compare`
+- Example: `repostem ask "What has changed in the architecture?"`
+- Example: `repostem ask "What is the drift between snapshots?"`
+- Options: Supports `--branch`, `--no-branch-filter`, `--since` for snapshot filtering
+
+**Hotspot questions** (no file path required):
+- Keywords: `hotspot`, `biggest problem`, `problematic`, `worst`, `most critical`
+- Example: `repostem ask "What are the hotspots?"`
+- Example: `repostem ask "What is the biggest problem in the codebase?"`
 
 **Examples:**
 ```bash
@@ -347,13 +374,38 @@ repostem ask "What are the risks in src/utils.js?"
 repostem ask "Is src/api/client.js fragile?"
 repostem ask "What threats exist in src/components/Button.tsx?"
 
-# Impact analysis questions  
+# Impact analysis questions
 repostem ask "What would be the impact of changing src/core/engine.ts?"
 repostem ask "What are the consequences of modifying src/utils/helpers.js?"
 repostem ask "Show me the effects of updating src/api/client.ts"
+
+# Trend analysis questions
+repostem ask "What is the trend of hotspots?"
+repostem ask "Is the architecture getting worse?"
+repostem ask "What is the evolution of risk?"
+
+# Trend analysis with options
+repostem ask "What is the trend of hotspots?" --branch main
+repostem ask "What is the trend of hotspots?" --since <snapshot-id>
+repostem ask "What is the trend of hotspots?" --no-branch-filter
+
+# Drift analysis questions
+repostem ask "What has changed in the architecture?"
+repostem ask "What is the drift between snapshots?"
+repostem ask "Compare the current state with previous"
+
+# Drift analysis with options
+repostem ask "What has changed?" --branch main
+repostem ask "What has changed?" --since <snapshot-id>
+repostem ask "What has changed?" --no-branch-filter
+
+# Hotspot analysis questions
+repostem ask "What are the hotspots?"
+repostem ask "What is the biggest problem in the codebase?"
+repostem ask "Which files are most problematic?"
 ```
 
-**Note**: Questions without these keywords may not be properly interpreted in the current version.
+**Note**: Risk and impact questions require a file path in the question. Trend, drift, and hotspot questions do not require a file path. The `--branch`, `--no-branch-filter`, and `--since` options only apply to trend and drift questions.
 
 ## 📊 Risk Metrics
 
