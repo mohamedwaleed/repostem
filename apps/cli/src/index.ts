@@ -22,7 +22,7 @@ const program = new Command();
 
 program
   .name(packageJson.name)
-  .description(packageJson.description)
+  .description(`${packageJson.description} v${packageJson.version}`)
   .version(packageJson.version);
 
 program.addCommand(initCommand);
