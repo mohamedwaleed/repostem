@@ -96,14 +96,17 @@ export function outputDrift(result: any, format: OutputFormat = OutputFormat.TEX
   if (result.impactChanges?.items?.length > 0) {
     lines.push('');
     for (const item of result.impactChanges.items) {
-      const delta = item.delta ?? 0;
+      const delta = item.impactRatioDelta ?? 0;
       const arrow = delta > 0 ? chalk.yellow('↑') : chalk.blue('↓');
-      const deltaStr = delta > 0 ? `+${(delta * 100).toFixed(1)}%` : `${(delta * 100).toFixed(1)}%`;
+      const deltaStr = delta > 0 ? `+${(delta * 100).toFixed(2)}%` : `${(delta * 100).toFixed(2)}%`;
       const deltaColor = delta > 0 ? chalk.yellow : chalk.blue;
-      const prevPct = ((item.previousImpactRatio ?? 0) * 100).toFixed(0);
-      const currPct = ((item.currentImpactRatio ?? 0) * 100).toFixed(0);
+      const prevPct = ((item.previousImpactRatio ?? 0) * 100).toFixed(2);
+      const currPct = ((item.currentImpactRatio ?? 0) * 100).toFixed(2);
+      const prevDependents = item.previousTransitiveDependents ?? 0;
+      const currDependents = item.currentTransitiveDependents ?? 0;
       lines.push(`  ${arrow} ${chalk.white(item.file)}`);
       lines.push(chalk.gray(`    Impact: ${prevPct}% → ${currPct}% (${deltaColor(deltaStr)})`));
+      lines.push(chalk.gray(`    Transitive Dependents: ${prevDependents} → ${currDependents} (${deltaColor(item.transitiveDependentsDelta > 0 ? `+${item.transitiveDependentsDelta}` : `${item.transitiveDependentsDelta}`)})`));
     }
   }
   lines.push('');

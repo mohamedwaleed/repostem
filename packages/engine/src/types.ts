@@ -257,7 +257,10 @@ export interface ImpactChangeItem {
   file: string;
   previousImpactRatio: number;
   currentImpactRatio: number;
-  delta: number;
+  previousTransitiveDependents: number;
+  currentTransitiveDependents: number;
+  impactRatioDelta: number;
+  transitiveDependentsDelta: number;
 }
 
 export interface DependencyChangeSummary {
