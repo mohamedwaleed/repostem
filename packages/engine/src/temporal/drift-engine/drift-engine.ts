@@ -140,7 +140,10 @@ const detectImpactChanges = (
                 file: filePath,
                 previousImpactRatio: prevImpact.impactRatio,
                 currentImpactRatio: currImpact.impactRatio,
-                delta: deltaRatio
+                impactRatioDelta: deltaRatio,
+                previousTransitiveDependents: prevImpact.totalImpactCount,
+                currentTransitiveDependents: currImpact.totalImpactCount,
+                transitiveDependentsDelta: deltaCount
             });
             // Count as increased only if the actual impact ratio increased
             if (deltaRatio > 0) {

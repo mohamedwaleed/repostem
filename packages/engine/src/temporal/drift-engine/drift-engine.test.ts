@@ -350,7 +350,7 @@ describe('DriftEngine - detectDrift', () => {
             expect(result.impactChanges.increasedCount).toBe(1);
             expect(result.impactChanges.decreasedCount).toBe(0);
             expect(result.impactChanges.items).toHaveLength(1);
-            expect(result.impactChanges.items[0].delta).toBeCloseTo(0.7, 10);
+            expect(result.impactChanges.items[0].impactRatioDelta).toBeCloseTo(0.7, 10);
         });
 
         it('should filter impact changes below threshold', () => {
