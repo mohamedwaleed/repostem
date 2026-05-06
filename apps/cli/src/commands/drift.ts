@@ -1,6 +1,7 @@
 import { detectDrift } from "@repostem/engine";
 import { Command } from "commander";
-import { outputDrift, parseOutputFormat } from "../utils/output";
+import { outputDrift, parseOutputFormat, OutputFormat } from "../utils/output";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("drift")
@@ -19,11 +20,23 @@ export default new Command()
   )
   .option("--since <id>", "Snapshot ID to compare against (from history)")
   .action(async (options: { repo?: string; branch?: string; output?: string; since?: string }) => {
+    const format = parseOutputFormat(options.output);
+    
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
+    
     try {
+      progress.startSpinner('Loading snapshots...');
+      
+      progress.updateSpinner('Computing architectural drift...');
+      
       const drift = await detectDrift(options);
-      const format = parseOutputFormat(options.output);
+      
+      progress.succeedSpinner('Drift analysis complete!');
+      
       outputDrift(drift, format);
     } catch (err) {
+      progress.failSpinner('Drift analysis failed');
       console.error(`Error: ${(err as Error).message}`);
       process.exitCode = 1;
     }

@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { getConfig, checkConfigFile } from '@repostem/engine';
 import { AdapterFactory, runKnexMigrations, getMigrationStatus } from '@repostem/engine';
 import chalk from 'chalk';
+import { progress } from '../utils/progress';
 
 const migrateCommand = new Command('migrate')
   .description('Run database migrations')
@@ -28,9 +29,13 @@ const migrateCommand = new Command('migrate')
       await adapter.connect();
 
       if (options.status) {
-        console.log(chalk.blue('📊 Migration Status\n'));
+        progress.startSpinner('Checking migration status...');
+        
         const status = await getMigrationStatus(adapter);
         
+        progress.succeedSpinner('Migration status retrieved!');
+        
+        console.log(chalk.blue('\n📊 Migration Status\n'));
         console.log(chalk.green(`✅ Completed migrations (${status.completed.length}):`));
         status.completed.forEach((m: string) => console.log(`   - ${m}`));
         
@@ -41,23 +46,40 @@ const migrateCommand = new Command('migrate')
           status.pending.forEach((m: string) => console.log(`   - ${m}`));
         }
       } else {
-        console.log(chalk.blue('🔄 Running migrations...\n'));
+        progress.startSpinner('Checking for pending migrations...');
+        
+        const status = await getMigrationStatus(adapter);
+        
+        if (status.pending.length === 0) {
+          progress.succeedSpinner('No pending migrations');
+          await adapter.disconnect();
+          return;
+        }
+        
+        progress.stopSpinner();
+        
+        // Use progress bar for migrations
+        progress.startProgress(status.pending.length, 'Running migrations');
+        
         const result = await runKnexMigrations(adapter);
+        
+        progress.stopProgress();
 
         if (result.success) {
-          console.log(chalk.green(`✅ ${result.message}`));
+          console.log(chalk.green(`\n✅ ${result.message}`));
           if (result.migrationsRun.length > 0) {
             console.log(chalk.gray('\nMigrations applied:'));
             result.migrationsRun.forEach((m: string) => console.log(chalk.gray(`   - ${m}`)));
           }
         } else {
-          console.error(chalk.red(`❌ ${result.message}`));
+          console.error(chalk.red(`\n❌ ${result.message}`));
           process.exit(1);
         }
       }
 
       await adapter.disconnect();
     } catch (error) {
+      progress.failSpinner('Migration failed');
       console.error(chalk.red('❌ Migration failed:'), error instanceof Error ? error.message : error);
       try {
         await adapter.disconnect();

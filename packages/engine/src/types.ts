@@ -321,3 +321,9 @@ export interface HotspotTrendItem {
   impactDelta: number;
   trendScore: number;
 }
+
+export interface AskServiceOptions {
+  branch?: string;
+  noBranchFilter?: boolean;
+  since?: string;
+}

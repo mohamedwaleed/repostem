@@ -1,6 +1,7 @@
 import { Command } from "commander";
-import { analyzeRepository } from "@repostem/engine";
-import { outputProjectAnalysis, parseOutputFormat } from "../utils/output";
+import { analyzeRepository, ProgressEmitter } from "@repostem/engine";
+import { outputProjectAnalysis, parseOutputFormat, OutputFormat } from "../utils/output";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("analyze")
@@ -8,16 +9,31 @@ export default new Command()
   .option("-r, --repo <path>", "Path to repository")
   .option("-o, --output <format>", "Output format (text, json, table)", "text")
   .action(async (options: { repo?: string; output?: string }) => {
-    const result = await analyzeRepository(options.repo || process.cwd());
     const format = parseOutputFormat(options.output);
     
-    if (result.warning) {
-      console.warn(`\n⚠️  Warning: ${result.warning}\n`);
-    }
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
     
-    outputProjectAnalysis(result.analysis, format);
-    
-    if (result.persisted) {
-      console.log(`\n✓ Snapshot persisted (ID: ${result.snapshotId})\n`);
+    try {
+      // Create progress emitter and attach to progress manager
+      const progressEmitter = new ProgressEmitter();
+      progress.attachToEmitter(progressEmitter);
+      
+      const result = await analyzeRepository(options.repo || process.cwd(), progressEmitter);
+      
+      console.log(''); // Add spacing after progress
+      
+      if (result.warning) {
+        console.warn(`⚠️  Warning: ${result.warning}\n`);
+      }
+      
+      outputProjectAnalysis(result.analysis, format);
+      
+      if (result.persisted) {
+        console.log(`\n✓ Snapshot persisted (ID: ${result.snapshotId})\n`);
+      }
+    } catch (error) {
+      progress.failSpinner('Analysis failed');
+      throw error;
     }
   });

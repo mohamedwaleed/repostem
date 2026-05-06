@@ -13,6 +13,7 @@ import {
   FileImpactResult, 
   FileRiskAnalysisResult
 } from "../types";
+import { ProgressEmitter, emitProgress } from "../utils/progress-emitter";
 
 async function explainFileRisk(repoPath: string, filePath: string, useAI: boolean = true): Promise<string> {
   const snapshot = await buildSnapshot(repoPath);
@@ -48,10 +49,15 @@ async function explainFileImpact(repoPath: string, filePath: string, useAI: bool
 /**
  * Analyze repository at the project level
  */
-export async function analyzeRepository(repoPath: string): Promise<AnalyzeRepositoryResult> {
-  const snapshot = await buildSnapshot(repoPath);
+export async function analyzeRepository(repoPath: string, progressEmitter?: ProgressEmitter): Promise<AnalyzeRepositoryResult> {
+  const snapshot = await buildSnapshot(repoPath, progressEmitter);
   const analysis = buildSnapshotSummary(snapshot);
+  
+  emitProgress(progressEmitter, 'persistence:saving', undefined);
   const persistResult = await tryPersistSnapshot(repoPath, snapshot);
+  if (persistResult.persisted && persistResult.snapshotId) {
+    emitProgress(progressEmitter, 'persistence:saved', { snapshotId: persistResult.snapshotId });
+  }
   
   return {
     analysis,
@@ -62,8 +68,8 @@ export async function analyzeRepository(repoPath: string): Promise<AnalyzeReposi
 /**
  * Analyze risk for a specific file
  */
-export async function analyzeFileRisk(repoPath: string, filePath: string): Promise<FileRiskAnalysisResult> {
-  const snapshot = await buildSnapshot(repoPath);
+export async function analyzeFileRisk(repoPath: string, filePath: string, progressEmitter?: ProgressEmitter): Promise<FileRiskAnalysisResult> {
+  const snapshot = await buildSnapshot(repoPath, progressEmitter);
   
   const fileSnapshot = snapshot.files.get(filePath);
   if (!fileSnapshot) {
@@ -84,9 +90,13 @@ export async function analyzeFileRisk(repoPath: string, filePath: string): Promi
 /**
  * Compute impact for a specific file
  */
-export async function computeFileImpact(repoPath: string, filePath: string): Promise<FileImpactResult> {
-  const structuredDependenciesData = parseRepository(repoPath);
+export async function computeFileImpact(repoPath: string, filePath: string, progressEmitter?: ProgressEmitter): Promise<FileImpactResult> {
+  const structuredDependenciesData = parseRepository(repoPath, { language: 0 as any }, progressEmitter);
+  
+  emitProgress(progressEmitter, 'graph:building', undefined);
   const dependencyGraph = buildDependencyGraph(structuredDependenciesData);
+  emitProgress(progressEmitter, 'graph:built', { totalEdges: dependencyGraph.getEdges().size });
+  
   if (!dependencyGraph.getNode(filePath)) {
     throw new Error(`File ${filePath} not found in metrics`);
   }
@@ -96,8 +106,8 @@ export async function computeFileImpact(repoPath: string, filePath: string): Pro
 /**
  * Detect cycles in the repository
  */
-export async function detectRepositoryCycles(repoPath: string): Promise<Cycle[]> {
-  const snapshot = await buildSnapshot(repoPath);
+export async function detectRepositoryCycles(repoPath: string, progressEmitter?: ProgressEmitter): Promise<Cycle[]> {
+  const snapshot = await buildSnapshot(repoPath, progressEmitter);
   return snapshot.cycles;
 }
 

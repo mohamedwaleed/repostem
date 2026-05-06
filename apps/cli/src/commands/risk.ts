@@ -1,6 +1,7 @@
 import { Command } from "commander";
-import { analyzeFileRisk } from "@repostem/engine";
-import { parseOutputFormat, outputFileRisk } from "../utils/output";
+import { analyzeFileRisk, ProgressEmitter } from "@repostem/engine";
+import { parseOutputFormat, outputFileRisk, OutputFormat } from "../utils/output";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("risk")
@@ -9,7 +10,22 @@ export default new Command()
   .argument("<filePath>", "File path to analyze")
   .option("-o, --output <format>", "Output format (text, json, table)", "text")
   .action(async (filePath: string, options: { repo?: string; output?: string }) => {
-    const result = await analyzeFileRisk(options.repo || process.cwd(), filePath);
     const format = parseOutputFormat(options.output);
-    outputFileRisk(result, format);
+    
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
+    
+    try {
+      const progressEmitter = new ProgressEmitter();
+      progress.attachToEmitter(progressEmitter);
+      
+      const result = await analyzeFileRisk(options.repo || process.cwd(), filePath, progressEmitter);
+      
+      console.log(''); // Add spacing after progress
+      
+      outputFileRisk(result, format);
+    } catch (error) {
+      progress.failSpinner('Risk analysis failed');
+      throw error;
+    }
   });

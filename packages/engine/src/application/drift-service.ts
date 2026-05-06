@@ -3,11 +3,12 @@ import { withServiceContext } from '../utils/service-context';
 import { detectDrift as detectDriftEngine } from '../temporal/drift-engine/drift-engine';
 import { FileSnapshotRepository, EdgeRepository, CycleRepository } from '../persistence/repositories';
 import { reconstructSnapshot } from '../persistence/snapshot-reconstructor';
+import { ProgressEmitter } from '../utils/progress-emitter';
 
 /**
  * Compare two snapshots to detect architectural drift
  */
-export async function detectDrift(options: DriftServiceOptions = {}): Promise<DriftResult | null> {
+export async function detectDrift(options: DriftServiceOptions = {}, progressEmitter?: ProgressEmitter): Promise<DriftResult | null> {
   return withServiceContext(options, async (context) => {
     let snapshotRecord1, snapshotRecord2;
     
