@@ -1,6 +1,7 @@
 import { Command } from "commander";
-import { parseOutputFormat, outputFileImpact } from "../utils/output";
-import { ask } from "@repostem/engine";
+import { parseOutputFormat, OutputFormat } from "../utils/output";
+import { ask, ProgressEmitter } from "@repostem/engine";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("ask")
@@ -34,14 +35,25 @@ export default new Command()
     noBranchFilter?: boolean;
     since?: string;
   }) => {
-    try{
+    const format = parseOutputFormat(options.output);
+    
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
+    
+    try {
+      const progressEmitter = new ProgressEmitter();
+      progress.attachToEmitter(progressEmitter);
+      
       const result = await ask(question, options.repo || process.cwd(), {
         branch: options.branch,
         noBranchFilter: options.noBranchFilter,
         since: options.since
-      });
+      }, progressEmitter);
+      
+      console.log(''); // Add spacing after progress
       console.log(result);
     } catch (error) {
+      progress.failSpinner('Failed to generate response');
       console.error((error as Error).message);
     }
   });

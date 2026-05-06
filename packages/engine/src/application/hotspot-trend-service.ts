@@ -3,11 +3,13 @@ import { withServiceContext } from '../utils/service-context';
 import { FileSnapshotRepository, EdgeRepository, CycleRepository } from '../persistence/repositories';
 import { reconstructSnapshot } from '../persistence/snapshot-reconstructor';
 import { computeHotspotTrends } from '../core/hostspot-engine/hotspot-trend-engine';
+import { ProgressEmitter } from '../utils/progress-emitter';
 
 export async function calculateHotspotTrends(
   options: HotspotTrendServiceOptions = {},
   trendThreshold: number = 0.05,
-  limit: number = 5
+  limit: number = 5,
+  progressEmitter?: ProgressEmitter
 ): Promise<HotspotTrendItem[]> {
   return withServiceContext(options, async (context) => {
     let snapshotRecord1, snapshotRecord2;

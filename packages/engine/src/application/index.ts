@@ -9,7 +9,7 @@ export {
 } from './analyze-service';
 
 // Ask Service
-export { ask, AskServiceOptions } from './ask-service';
+export { ask } from './ask-service';
 
 // Drift Service
 export { detectDrift } from './drift-service';
@@ -34,5 +34,4 @@ export {
 export {
   calculateHotspotTrends
 } from './hotspot-trend-service';
-export { HotspotTrendItem } from '../types';
-export { HotspotTrendServiceOptions } from '../types';
+export { HotspotTrendServiceOptions, AskServiceOptions, HotspotTrendItem } from '../types';

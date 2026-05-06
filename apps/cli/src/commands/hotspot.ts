@@ -1,6 +1,7 @@
 import { calculateHotspots, calculateHotspotTrends } from "@repostem/engine";
 import { Command } from "commander";
-import { outputHotspot, outputHotspotTrend, parseOutputFormat } from "../utils/output";
+import { outputHotspot, outputHotspotTrend, parseOutputFormat, OutputFormat } from "../utils/output";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("hotspot")
@@ -21,6 +22,11 @@ export default new Command()
     branch?: string;
     noBranchFilter?: boolean;
   }) => {
+    const format = parseOutputFormat(options.output);
+    
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
+    
     try {
       if (!options.trend && (options.since || options.branch || options.noBranchFilter)) {
         console.error("Error: --since, --branch, and --no-branch-filter can only be used with --trend");
@@ -29,18 +35,29 @@ export default new Command()
       }
 
       if (options.trend) {
+        progress.startSpinner('Analyzing hotspot trends...');
+        
         const trends = await calculateHotspotTrends({ 
           repo: options.repo || process.cwd(),
           since: options.since,
           branch: options.branch,
           noBranchFilter: options.noBranchFilter
         });
-        outputHotspotTrend(trends, parseOutputFormat(options.output));
+        
+        progress.succeedSpinner('Trend analysis complete!');
+        
+        outputHotspotTrend(trends, format);
       } else {
+        progress.startSpinner('Calculating hotspots...');
+        
         const hotspots = await calculateHotspots(options.repo || process.cwd());
-        outputHotspot(hotspots, parseOutputFormat(options.output));
+        
+        progress.succeedSpinner('Hotspot analysis complete!');
+        
+        outputHotspot(hotspots, format);
       }
     } catch (err) {
+      progress.failSpinner('Hotspot analysis failed');
       console.error(`Error: ${(err as Error).message}`);
       process.exitCode = 1;
     }

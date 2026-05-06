@@ -12,6 +12,7 @@ import {
 } from "@repostem/engine";
 import path from "path";
 import { InitOptions } from "../types";
+import { progress } from "../utils/progress";
 
 const STORAGE_TYPE_SQLITE = "sqlite";
 const STORAGE_TYPE_POSTGRESQL = "postgresql";
@@ -194,6 +195,8 @@ async function performInitialization(
   console.log(`  Storage: ${storageType}`);
   console.log(`  Path: ${storagePath}\n`);
 
+  progress.startSpinner('Initializing repository...');
+
   const result = await initializeRepo(repoPath, {
     storageType,
     storagePath,
@@ -201,11 +204,12 @@ async function performInitialization(
   });
 
   if (result.success) {
-    console.log("Success! Repository initialized for persistence.");
+    progress.succeedSpinner('Repository initialized!');
     console.log(`\n${result.message}`);
     console.log(`\nConfiguration saved to: ${path.join(repoPath, ".repostem.json")}`);
   } else {
-    console.error("Initialization failed:", result.message);
+    progress.failSpinner('Initialization failed');
+    console.error(result.message);
     process.exit(1);
   }
 }
@@ -243,10 +247,13 @@ export default new Command()
         }
 
         try {
+          progress.startSpinner('Resetting persistence...');
           const result = await resetPersistence(repoPath);
+          progress.succeedSpinner('Persistence reset complete!');
           console.log(result.message);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
+          progress.failSpinner('Reset failed');
           console.error(`Error resetting persistence: ${message}`);
           process.exit(1);
         }

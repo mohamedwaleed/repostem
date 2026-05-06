@@ -24,6 +24,9 @@ export { classify } from './utils/classify';
 
 export { getMetricLabel, METRIC_LABELS } from './metric-labels';
 
+// Progress tracking
+export { ProgressEmitter, ProgressEvents, ProgressOptions, emitProgress } from './utils/progress-emitter';
+
 export * from './types';
 
 // Config exports

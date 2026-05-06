@@ -1,6 +1,7 @@
 import { Command } from "commander";
-import { detectRepositoryCycles } from "@repostem/engine";
-import { parseOutputFormat, outputFileImpact } from "../utils/output";
+import { detectRepositoryCycles, ProgressEmitter } from "@repostem/engine";
+import { parseOutputFormat, outputCycles, OutputFormat } from "../utils/output";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("cycles")
@@ -8,7 +9,22 @@ export default new Command()
   .option("-r, --repo <path>", "Path to repository")
   .option("-o, --output <format>", "Output format (text, json, table)", "text")
   .action(async (options: { repo?: string; output?: string }) => {
-    const result = await detectRepositoryCycles(options.repo || process.cwd());
     const format = parseOutputFormat(options.output);
-    outputFileImpact(result, format);
+    
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
+    
+    try {
+      const progressEmitter = new ProgressEmitter();
+      progress.attachToEmitter(progressEmitter);
+      
+      const result = await detectRepositoryCycles(options.repo || process.cwd(), progressEmitter);
+      
+      console.log(''); // Add spacing after progress
+      
+      outputCycles(result, format);
+    } catch (error) {
+      progress.failSpinner('Cycle detection failed');
+      throw error;
+    }
   });

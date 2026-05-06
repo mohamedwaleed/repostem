@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { getSnapshotHistory } from "@repostem/engine";
 import { outputSnapshotHistory, parseOutputFormat, OutputFormat } from "../utils/output";
+import { progress } from "../utils/progress";
 
 export default new Command()
   .name("history")
@@ -22,10 +23,18 @@ export default new Command()
     "table"
   )
   .action(async (options: { repo?: string; branch?: string; output?: string }) => {
+    const format = parseOutputFormat(options.output);
+    
+    // Disable progress for JSON output
+    progress.setEnabled(format !== OutputFormat.JSON);
+    
     try {
+      progress.startSpinner('Loading snapshot history...');
+      
       const snapshots = await getSnapshotHistory(options);
-      const format = parseOutputFormat(options.output);
-
+      
+      progress.succeedSpinner('History loaded!');
+      
       if (snapshots.length === 0) {
         const scope = options.branch
           ? `branch '${options.branch}'`
@@ -44,6 +53,7 @@ export default new Command()
 
       outputSnapshotHistory(snapshots, format);
     } catch (err) {
+      progress.failSpinner('Failed to load history');
       console.error(`Error: ${(err as Error).message}`);
       process.exitCode = 1;
     }
