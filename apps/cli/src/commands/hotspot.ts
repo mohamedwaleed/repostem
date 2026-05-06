@@ -1,4 +1,4 @@
-import { calculateHotspots, calculateHotspotTrends } from "@repostem/engine";
+import { calculateHotspots, calculateHotspotTrends, ProgressEmitter } from "@repostem/engine";
 import { Command } from "commander";
 import { outputHotspot, outputHotspotTrend, parseOutputFormat, OutputFormat } from "../utils/output";
 import { progress } from "../utils/progress";
@@ -34,26 +34,23 @@ export default new Command()
         return;
       }
 
+      const progressEmitter = new ProgressEmitter();
+      progress.attachToEmitter(progressEmitter);
+
       if (options.trend) {
-        progress.startSpinner('Analyzing hotspot trends...');
-        
         const trends = await calculateHotspotTrends({ 
           repo: options.repo || process.cwd(),
           since: options.since,
           branch: options.branch,
           noBranchFilter: options.noBranchFilter
-        });
+        }, 0.05, 5, progressEmitter);
         
-        progress.succeedSpinner('Trend analysis complete!');
-        
+        console.log(''); // Add spacing after progress
         outputHotspotTrend(trends, format);
       } else {
-        progress.startSpinner('Calculating hotspots...');
+        const hotspots = await calculateHotspots(options.repo || process.cwd(), 0.2, 5, progressEmitter);
         
-        const hotspots = await calculateHotspots(options.repo || process.cwd());
-        
-        progress.succeedSpinner('Hotspot analysis complete!');
-        
+        console.log(''); // Add spacing after progress
         outputHotspot(hotspots, format);
       }
     } catch (err) {

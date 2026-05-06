@@ -3,30 +3,33 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
+      release_title:
+        description: 'Release title (e.g., "Release v0.2.0")'
+        required: true
+        type: string
+      release_notes:
+        description: 'Release notes (markdown format)'
+        required: true
+        type: string
       prerelease:
         description: 'Is this a prerelease?'
         required: false
         default: false
         type: boolean
-      release_notes:
-        description: 'Release notes (markdown format)'
-        required: false
-        default: ''
-        type: string
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -57,56 +60,52 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          # Check if tag already exists
-          if git rev-parse "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "Tag v${{ steps.version.outputs.version }} already exists, skipping tag creation"
-          else
-            git tag v${{ steps.version.outputs.version }}
-            git push origin v${{ steps.version.outputs.version }}
-          fi
+          git tag "v${{ steps.version.outputs.version }}" || echo "Tag already exists"
+          git push origin "v${{ steps.version.outputs.version }}" || echo "Tag already pushed"
 
-      - name: Create or Update GitHub Release
+      - name: Fetch Contributors
+        id: contributors
         run: |
-          # Set release notes - use user input if provided, otherwise use default
-          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
-            NOTES="${{ github.event.inputs.release_notes }}"
+          # Get contributors since last tag using GitHub API
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            # First release - get all contributors
+            CONTRIBUTORS_JSON=$(gh api repos/${{ github.repository }}/contributors --jq '.[].login')
           else
-            NOTES="## Changes in v${{ steps.version.outputs.version }}
-            
-            ### Features
-            - CLI tool with 5 commands (analyze, risk, ask, cycles, impact)
-            - Structural risk analysis with AI-powered explanations
-            - Dependency graph construction for JS/TS repositories
-            - Circular dependency detection
-            - Configuration support with ignore patterns
-            
-            ### Installation
-            \`\`\`bash
-            pnpm install -g @repostem/cli
-            \`\`\`
-            
-            ### Quick Start
-            \`\`\`bash
-            repostem analyze /path/to/your/repo
-            \`\`\`"
+            # Get contributors who committed since last tag
+            CONTRIBUTORS_JSON=$(gh api repos/${{ github.repository }}/commits?since=$(git log -1 --format=%ci "$PREV_TAG" | cut -d' ' -f1-2 | tr ' ' 'T') --jq '[.[].author.login] | unique')
           fi
-
-          # Check if release already exists
-          if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-            echo "Release v${{ steps.version.outputs.version }} already exists, updating..."
-            gh release edit "v${{ steps.version.outputs.version }}" \
-              --title "Release v${{ steps.version.outputs.version }}" \
-              --draft=false \
-              --prerelease=${{ github.event.inputs.prerelease }} \
-              --notes "$NOTES"
+          
+          # Format as @mentions for avatars
+          if [ -n "$CONTRIBUTORS_JSON" ]; then
+            CONTRIBUTORS=$(echo "$CONTRIBUTORS_JSON" | jq -r '.[] | "@\(.),"') | tr -d '\n' | sed 's/,$//'
+          fi
+          
+          if [ -z "$CONTRIBUTORS" ]; then
+            echo "contributors_list=<<EOF" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           else
-            echo "Creating new release v${{ steps.version.outputs.version }}..."
-            gh release create "v${{ steps.version.outputs.version }}" \
-              --title "Release v${{ steps.version.outputs.version }}" \
-              --draft=false \
-              --prerelease=${{ github.event.inputs.prerelease }} \
-              --notes "$NOTES"
+            echo "contributors_list<<EOF" >> $GITHUB_OUTPUT
+            echo "## 🤝 New Contributors" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "$CONTRIBUTORS" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: ${{ github.event.inputs.release_title }}
+          body: |            
+            ${{ github.event.inputs.release_notes }}
+
+            ${{ steps.contributors.outputs.contributors_list }}
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+          make_latest: true
 
