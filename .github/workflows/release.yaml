@@ -83,7 +83,7 @@ jobs:
           fi
           
           if [ -z "$CONTRIBUTORS" ]; then
-            echo "contributors_list=<<EOF" >> $GITHUB_OUTPUT
+            echo "contributors_list<<EOF" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "contributors_list<<EOF" >> $GITHUB_OUTPUT
