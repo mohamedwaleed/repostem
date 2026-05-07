@@ -1,7 +1,7 @@
 {
   "name": "@repostem/cli",
   "description": "A powerful command-line interface for structural risk analysis of JavaScript/TypeScript repositories.",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "private": false,
   "main": "./dist/index.js",
   "bin": {

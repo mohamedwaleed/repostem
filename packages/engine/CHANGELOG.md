@@ -3,6 +3,7 @@
 ## 0.2.0 - 2026-05-07
 
 ### Added
+
 - Add ProgressEmitter class for event-based progress tracking
 - Add progress events for file parsing, graph building, metrics, cycles, risk, persistence
 - Add optional ProgressEmitter parameter to all application services
@@ -17,6 +18,7 @@
 - Export ProgressEmitter, ProgressEvents, ProgressOptions, and emitProgress
 
 ### Changed
+
 - Update drift detection to include previous/current/delta transitive dependent counts
 - Update Hotspot type to include file property
 

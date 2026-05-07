@@ -3,6 +3,7 @@
 ## 0.2.0 - 2026-05-07
 
 ### Added
+
 - Add real-time event-based progress indicators for all CLI commands (#34)
   - Progress bars for file parsing with actual percentages and file counts
   - Spinners for indeterminate operations (graph building, metrics, cycles, risk)
@@ -21,11 +22,13 @@
 - Extract reusable banner function for consistent CLI output across commands
 
 ### Changed
+
 - Enhance hotspot output with classification labels (Low/Medium/High) and color coding
 - Updated dependencies
   - @repostem/engine@0.2.0
 
 ### Fixed
+
 - Fix impact delta calculation to correctly show increased/decreased counts
 
 ## 0.1.6
