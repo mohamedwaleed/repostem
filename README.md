@@ -86,7 +86,7 @@ RepoStem aims to evolve into an AI Project Brain — a persistent cognition laye
 
 ## Roadmap
 - Stage 1: Structural intelligence ✅
-- Stage 2: Temporal evolution tracking
+- Stage 2: Temporal evolution tracking ✅
 - Stage 3: PR-level structural cognition
 - Stage 4: Governance & contributor modeling
 - Stage 5: AI Project Brain
