@@ -17,7 +17,6 @@ export default new Command()
     ask "What has changed in the architecture?"
     ask "What is the trend of hotspots?"
   `)
-  .option("-o, --output <format>", "Output format (text, json, table)", "text")
   .option("-r, --repo <path>", "Repository path", process.cwd())
   .option(
     "-b, --branch <name>",
@@ -29,7 +28,6 @@ export default new Command()
   )
   .option("--since <id>", "Snapshot ID to compare against (from history)")
   .action(async (question: string, options: {
-    output?: string;
     repo?: string;
     branch?: string;
     noBranchFilter?: boolean;
@@ -55,5 +53,6 @@ export default new Command()
     } catch (error) {
       progress.failSpinner('Failed to generate response');
       console.error((error as Error).message);
+      process.exitCode = 1;
     }
   });

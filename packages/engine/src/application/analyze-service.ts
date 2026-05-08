@@ -60,7 +60,11 @@ export async function analyzeRepository(repoPath: string, progressEmitter?: Prog
   }
   
   return {
-    analysis,
+    analysis: {
+      ...analysis,
+      branch: snapshot.metadata.branch,
+      dirty: snapshot.metadata.dirty,
+    },
     ...persistResult
   };
 }

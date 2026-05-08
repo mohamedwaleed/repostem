@@ -12,7 +12,6 @@ export default new Command()
   .action(async (filePath: string, options: { repo?: string; output?: string }) => {
     const format = parseOutputFormat(options.output);
     
-    // Disable progress for JSON output
     progress.setEnabled(format !== OutputFormat.JSON);
     
     try {
@@ -21,11 +20,12 @@ export default new Command()
       
       const result = await computeFileImpact(options.repo || process.cwd(), filePath, progressEmitter);
       
-      console.log(''); // Add spacing after progress
+      console.log('');
       
       outputFileImpact(result, format);
     } catch (error) {
       progress.failSpinner('Impact analysis failed');
-      throw error;
+      console.error((error as Error).message);
+      process.exitCode = 1;
     }
   });

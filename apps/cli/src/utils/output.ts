@@ -15,25 +15,103 @@ export function outputProjectAnalysis(result: any, format: OutputFormat = Output
 }
 
 export function outputFileRisk(result: any, format: OutputFormat = OutputFormat.TEXT): void {
-  outputGeneric(result, format, {
-    title: "File Risk Analysis",
-    headers: ["Metric", "Value"]
-  });
+  if (format === OutputFormat.JSON) {
+    outputGeneric(result, format, { title: "File Risk Analysis" });
+    return;
+  }
+
+  const lines: string[] = [];
+
+  lines.push(chalk.bold.white(`File: ${result.file}`));
+  lines.push('');
+
+  const riskColor = result.riskLevel === MetricClassification.HIGH ? chalk.red :
+                    result.riskLevel === MetricClassification.MEDIUM ? chalk.yellow : chalk.green;
+  lines.push(chalk.gray(`  Risk: ${riskColor(capitalize(result.riskLevel))} (${result.riskScore.toFixed(2)})`));
+
+  const centColor = classify(result.centrality) === MetricClassification.HIGH ? chalk.magenta :
+                    classify(result.centrality) === MetricClassification.MEDIUM ? chalk.yellow : chalk.gray;
+  lines.push(chalk.gray(`  Dependency Importance: ${centColor(result.centrality.toFixed(2))}`));
+
+  const coupColor = classify(result.coupling) === MetricClassification.HIGH ? chalk.magenta :
+                    classify(result.coupling) === MetricClassification.MEDIUM ? chalk.yellow : chalk.gray;
+  lines.push(chalk.gray(`  Connectivity: ${coupColor(result.coupling.toFixed(2))}`));
+
+  const churnColor = classify(result.churn) === MetricClassification.HIGH ? chalk.hex('#FFA500') :
+                     classify(result.churn) === MetricClassification.MEDIUM ? chalk.yellow : chalk.gray;
+  lines.push(chalk.gray(`  Change Frequency: ${churnColor(result.churn.toFixed(2))}`));
+
+  if (result.hasCircularDependency) {
+    lines.push(chalk.red(`  Cyclic Dependency: Yes`));
+  }
+
+  console.log(lines.join('\n'));
 }
 
 export function outputFileImpact(result: any, format: OutputFormat = OutputFormat.TEXT): void {
-  outputGeneric(result, format, {
-    title: "File Impact Analysis",
-    headers: ["Metric", "Value"]
-  });
+  if (format === OutputFormat.JSON) {
+    outputGeneric(result, format, { title: "File Impact Analysis" });
+    return;
+  }
+
+  const lines: string[] = [];
+
+  lines.push(chalk.bold.white(`File: ${result.file}`));
+  lines.push('');
+
+  const impactPct = (result.impactRatio * 100).toFixed(1);
+  lines.push(chalk.gray(`  Direct dependents: ${result.directDependents?.length ?? 0}`));
+  lines.push(chalk.gray(`  Transitive dependents: ${result.transitiveDependents?.length ?? 0}`));
+  lines.push(chalk.gray(`  Total impact: ${result.totalImpactCount} files (${impactPct}% of codebase)`));
+
+  if (result.directDependents?.length > 0) {
+    lines.push('');
+    lines.push(chalk.gray('  Direct dependents:'));
+    const displayDeps = result.directDependents.slice(0, 5);
+    for (const dep of displayDeps) {
+      lines.push(chalk.gray(`    - ${dep}`));
+    }
+    const remaining = result.directDependents.length - 5;
+    if (remaining > 0) {
+      lines.push(chalk.gray(`    (+${remaining} more)`));
+    }
+  }
+
+  console.log(lines.join('\n'));
 }
 
 export function outputCycles(cycles: any, format: OutputFormat = OutputFormat.TEXT): void {
-  outputGeneric(cycles, format, {
-    title: "Circular Dependencies",
-    headers: ["Cycle", "Files", "Length"]
-  });
+  if (format === OutputFormat.JSON) {
+    console.log(JSON.stringify(cycles, null, 2));
+    return;
+  }
+
+  if (!cycles || cycles.length === 0) {
+    console.log(chalk.gray('No circular dependency groups detected'));
+    return;
+  }
+
+  const lines: string[] = [];
+  lines.push(chalk.bold.hex('#FFA500')(`Circular Dependency Groups (${cycles.length}):`));
+  lines.push('');
+
+  for (let i = 0; i < cycles.length; i++) {
+    const cycle = cycles[i];
+    const nodes = cycle.nodes ?? [];
+    lines.push(chalk.bold.white(`${i + 1}. ${nodes.length} files`));
+    for (const node of nodes) {
+      lines.push(chalk.gray(`   - ${node}`));
+    }
+    if (i < cycles.length - 1) {
+      lines.push('');
+    }
+  }
+
+  console.log(lines.join('\n'));
 }
+
+const DRIFT_MAX_ITEMS = 10;
+const DRIFT_MAX_CYCLE_FILES = 5;
 
 export function outputDrift(result: any, format: OutputFormat = OutputFormat.TEXT): void {
   if (format === OutputFormat.JSON) {
@@ -46,166 +124,148 @@ export function outputDrift(result: any, format: OutputFormat = OutputFormat.TEX
   const lines: string[] = [];
   
   // Header
-  lines.push(chalk.bold.cyan('=== Architectural Drift (Snapshot Comparison) ==='));
+  lines.push(chalk.bold.cyan('=== Architectural Drift ==='));
   lines.push('');
   
   // Snapshot info
   lines.push(chalk.bold('Previous Snapshot:'));
-  lines.push(chalk.gray(`  - Commit: ${result.previousSnapshot?.commitHash?.substring(0, 7) ?? 'unknown'}`));
-  lines.push(chalk.gray(`  - Dirty: ${result.previousSnapshot?.dirty ? 'true' : 'false'}`));
-  lines.push(chalk.gray(`  - Date: ${formatDate(result.previousSnapshot?.date)}`));
-  lines.push('');
+  lines.push(chalk.gray(`  Commit: ${result.previousSnapshot?.commitHash?.substring(0, 7) ?? 'unknown'}`));
+  lines.push(chalk.gray(`  Dirty: ${result.previousSnapshot?.dirty ? 'yes' : 'no'}`));
+  lines.push(chalk.gray(`  Date: ${formatDate(result.previousSnapshot?.date)}`));
   
   lines.push(chalk.bold('Current Snapshot:'));
-  lines.push(chalk.gray(`  - Commit: ${result.currentSnapshot?.commitHash?.substring(0, 7) ?? 'unknown'}`));
-  lines.push(chalk.gray(`  - Dirty: ${result.currentSnapshot?.dirty ? 'true' : 'false'}`));
-  lines.push(chalk.gray(`  - Date: ${formatDate(result.currentSnapshot?.date)}`));
+  lines.push(chalk.gray(`  Commit: ${result.currentSnapshot?.commitHash?.substring(0, 7) ?? 'unknown'}`));
+  lines.push(chalk.gray(`  Dirty: ${result.currentSnapshot?.dirty ? 'yes' : 'no'}`));
+  lines.push(chalk.gray(`  Date: ${formatDate(result.currentSnapshot?.date)}`));
   lines.push('');
-  lines.push(chalk.gray('----------------------------------------'));
   
   // Risk Changes
-  lines.push('');
   lines.push(chalk.bold.red('Risk Changes:'));
   const riskIncreased = result.riskChanges?.increasedCount ?? 0;
   const riskDecreased = result.riskChanges?.decreasedCount ?? 0;
-  lines.push(chalk.gray(`  - ${riskIncreased} file${riskIncreased !== 1 ? 's' : ''} increased risk level`));
-  lines.push(chalk.gray(`  - ${riskDecreased} file${riskDecreased !== 1 ? 's' : ''} decreased risk level`));
+  lines.push(chalk.gray(`  +${riskIncreased} / -${riskDecreased} files changed`));
   
-  if (result.riskChanges?.items?.length > 0) {
-    lines.push('');
-    for (const item of result.riskChanges.items) {
-      const delta = item.delta ?? 0;
-      const arrow = delta > 0 ? chalk.red('↑') : chalk.green('↓');
-      const deltaStr = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
-      const deltaColor = delta > 0 ? chalk.red : chalk.green;
-      lines.push(`  ${arrow} ${chalk.white(item.file)}`);
-      lines.push(chalk.gray(`    Risk: ${(item.previousRisk ?? 0).toFixed(2)} → ${(item.currentRisk ?? 0).toFixed(2)} (${deltaColor(deltaStr)})`));
-    }
+  const riskItems = result.riskChanges?.items ?? [];
+  const displayRiskItems = riskItems.slice(0, DRIFT_MAX_ITEMS);
+  for (const item of displayRiskItems) {
+    const delta = item.delta ?? 0;
+    const arrow = delta > 0 ? chalk.red('↑') : chalk.green('↓');
+    const deltaStr = delta > 0 ? `+${delta.toFixed(2)}` : delta.toFixed(2);
+    const deltaColor = delta > 0 ? chalk.red : chalk.green;
+    lines.push(`  ${arrow} ${chalk.white(item.file)}`);
+    lines.push(chalk.gray(`    ${(item.previousRisk ?? 0).toFixed(2)} → ${(item.currentRisk ?? 0).toFixed(2)} (${deltaColor(deltaStr)})`));
+  }
+  if (riskItems.length > DRIFT_MAX_ITEMS) {
+    lines.push(chalk.gray(`  ... and ${riskItems.length - DRIFT_MAX_ITEMS} more`));
   }
   lines.push('');
-  lines.push(chalk.gray('----------------------------------------'));
   
   // Impact Changes
-  lines.push('');
   lines.push(chalk.bold.yellow('Impact Changes:'));
   const impactIncreased = result.impactChanges?.increasedCount ?? 0;
   const impactDecreased = result.impactChanges?.decreasedCount ?? 0;
-  lines.push(chalk.gray(`  - ${impactIncreased} file${impactIncreased !== 1 ? 's' : ''} increased blast radius`));
-  lines.push(chalk.gray(`  - ${impactDecreased} file${impactDecreased !== 1 ? 's' : ''} decreased blast radius`));
+  lines.push(chalk.gray(`  +${impactIncreased} / -${impactDecreased} files changed`));
   
-  if (result.impactChanges?.items?.length > 0) {
-    lines.push('');
-    for (const item of result.impactChanges.items) {
-      const delta = item.impactRatioDelta ?? 0;
-      const arrow = delta > 0 ? chalk.yellow('↑') : chalk.blue('↓');
-      const deltaStr = delta > 0 ? `+${(delta * 100).toFixed(2)}%` : `${(delta * 100).toFixed(2)}%`;
-      const deltaColor = delta > 0 ? chalk.yellow : chalk.blue;
-      const prevPct = ((item.previousImpactRatio ?? 0) * 100).toFixed(2);
-      const currPct = ((item.currentImpactRatio ?? 0) * 100).toFixed(2);
-      const prevDependents = item.previousTransitiveDependents ?? 0;
-      const currDependents = item.currentTransitiveDependents ?? 0;
-      lines.push(`  ${arrow} ${chalk.white(item.file)}`);
-      lines.push(chalk.gray(`    Impact: ${prevPct}% → ${currPct}% (${deltaColor(deltaStr)})`));
-      lines.push(chalk.gray(`    Transitive Dependents: ${prevDependents} → ${currDependents} (${deltaColor(item.transitiveDependentsDelta > 0 ? `+${item.transitiveDependentsDelta}` : `${item.transitiveDependentsDelta}`)})`));
-    }
+  const impactItems = result.impactChanges?.items ?? [];
+  const displayImpactItems = impactItems.slice(0, DRIFT_MAX_ITEMS);
+  for (const item of displayImpactItems) {
+    const delta = item.impactRatioDelta ?? 0;
+    const arrow = delta > 0 ? chalk.yellow('↑') : chalk.blue('↓');
+    const deltaStr = delta > 0 ? `+${(delta * 100).toFixed(2)}%` : `${(delta * 100).toFixed(2)}%`;
+    const deltaColor = delta > 0 ? chalk.yellow : chalk.blue;
+    const prevPct = ((item.previousImpactRatio ?? 0) * 100).toFixed(2);
+    const currPct = ((item.currentImpactRatio ?? 0) * 100).toFixed(2);
+    const prevDependents = item.previousTransitiveDependents ?? 0;
+    const currDependents = item.currentTransitiveDependents ?? 0;
+    lines.push(`  ${arrow} ${chalk.white(item.file)}`);
+    lines.push(chalk.gray(`    Impact: ${prevPct}% → ${currPct}% (${deltaColor(deltaStr)})`));
+    lines.push(chalk.gray(`    Transitive Dependents: ${prevDependents} → ${currDependents} (${deltaColor(item.transitiveDependentsDelta > 0 ? `+${item.transitiveDependentsDelta}` : `${item.transitiveDependentsDelta}`)})`));
+  }
+  if (impactItems.length > DRIFT_MAX_ITEMS) {
+    lines.push(chalk.gray(`  ... and ${impactItems.length - DRIFT_MAX_ITEMS} more`));
   }
   lines.push('');
-  lines.push(chalk.gray('----------------------------------------'));
   
   // Dependency Changes
-  lines.push('');
-  lines.push(chalk.bold.magenta('Dependency Changes:'));
   const newEdges = result.dependencyChanges?.newEdges ?? 0;
   const removedEdges = result.dependencyChanges?.removedEdges ?? 0;
-  lines.push(chalk.gray(`  - ${newEdges} new structural edge${newEdges !== 1 ? 's' : ''} introduced`));
-  lines.push(chalk.gray(`  - ${removedEdges} edge${removedEdges !== 1 ? 's' : ''} removed`));
-  lines.push('');
-  lines.push(chalk.gray('----------------------------------------'));
+  if (newEdges > 0 || removedEdges > 0) {
+    lines.push(chalk.bold.magenta('Dependency Changes:'));
+    lines.push(chalk.gray(`  +${newEdges} / -${removedEdges} edges`));
+    lines.push('');
+  }
   
   // Cycle Changes
-  lines.push('');
-  lines.push(chalk.bold.hex('#FFA500')('Cycle Changes:'));
-  const newCycles = result.cycleChanges?.newCycles?.length ?? 0;
-  const resolvedCycles = result.cycleChanges?.resolvedCycles?.length ?? 0;
-  lines.push(chalk.gray(`  - ${newCycles} new cyclic group${newCycles !== 1 ? 's' : ''} detected`));
-  lines.push(chalk.gray(`  - ${resolvedCycles} cycle${resolvedCycles !== 1 ? 's' : ''} resolved`));
-  
-  if (result.cycleChanges?.newCycles?.length > 0) {
-    lines.push('');
-    for (const cycle of result.cycleChanges.newCycles) {
-      lines.push(chalk.red(`  New Cycle (${cycle.nodes?.length ?? 0} files):`));
-      for (const node of cycle.nodes ?? []) {
-        lines.push(chalk.gray(`    - ${node}`));
-      }
+  const newCycles = result.cycleChanges?.newCycles ?? [];
+  const resolvedCycles = result.cycleChanges?.resolvedCycles ?? [];
+  if (newCycles.length > 0 || resolvedCycles.length > 0) {
+    lines.push(chalk.bold.hex('#FFA500')('Cycle Changes:'));
+    lines.push(chalk.gray(`  +${newCycles.length} / -${resolvedCycles.length} cycles`));
+    for (const cycle of newCycles) {
+      const nodes = cycle.nodes ?? [];
+      const displayNodes = nodes.slice(0, DRIFT_MAX_CYCLE_FILES);
+      const nodeList = displayNodes.join(', ');
+      const suffix = nodes.length > DRIFT_MAX_CYCLE_FILES ? `, +${nodes.length - DRIFT_MAX_CYCLE_FILES} more` : '';
+      lines.push(chalk.red(`  + ${nodeList}${suffix}`));
     }
+    for (const cycle of resolvedCycles) {
+      const nodes = cycle.nodes ?? [];
+      const displayNodes = nodes.slice(0, DRIFT_MAX_CYCLE_FILES);
+      const nodeList = displayNodes.join(', ');
+      const suffix = nodes.length > DRIFT_MAX_CYCLE_FILES ? `, +${nodes.length - DRIFT_MAX_CYCLE_FILES} more` : '';
+      lines.push(chalk.green(`  - ${nodeList}${suffix}`));
+    }
+    lines.push('');
   }
   
-  if (result.cycleChanges?.resolvedCycles?.length > 0) {
+  // Complexity Score Change
+  const complexityDelta = result.complexityScoreChange?.delta;
+  if (complexityDelta !== undefined && complexityDelta !== null) {
+    lines.push(chalk.bold.cyan('Structural Complexity:'));
+    const prev = result.complexityScoreChange.previousComplexityScore.toFixed(2);
+    const curr = result.complexityScoreChange.currentComplexityScore.toFixed(2);
+    const formattedDelta = complexityDelta > 0
+      ? chalk.red(`+${complexityDelta.toFixed(2)}`)
+      : chalk.green(`${complexityDelta.toFixed(2)}`);
+    lines.push(chalk.gray(`  ${prev} → ${curr} (${formattedDelta})`));
     lines.push('');
-    for (const cycle of result.cycleChanges.resolvedCycles) {
-      lines.push(chalk.green(`  Resolved Cycle (${cycle.nodes?.length ?? 0} files):`));
-      for (const node of cycle.nodes ?? []) {
-        lines.push(chalk.gray(`    - ${node}`));
-      }
-    }
   }
-  lines.push('');
-  lines.push(chalk.gray('----------------------------------------'));
   
   // Hotspot Changes
-  lines.push('');
-  lines.push(chalk.bold.hex('#FF6B6B')('Hotspot Changes:'));
-  
-  const maxDisplayHotspots = 5;
-  
-  if (result.hotspotChanges?.newHotspots?.length > 0) {
+  const newHotspots = result.hotspotChanges?.newHotspots ?? [];
+  const resolvedHotspots = result.hotspotChanges?.resolvedHotspots ?? [];
+  if (newHotspots.length > 0 || resolvedHotspots.length > 0) {
+    lines.push(chalk.bold.hex('#FF6B6B')('Hotspot Changes:'));
+    const displayCount = 5;
+    if (newHotspots.length > 0) {
+      for (let i = 0; i < Math.min(newHotspots.length, displayCount); i++) {
+        const h = newHotspots[i];
+        const deltaStr = (h.delta ?? 0) > 0 ? `+${(h.delta ?? 0).toFixed(3)}` : (h.delta ?? 0).toFixed(3);
+        lines.push(chalk.red(`  + ${h.file} (${deltaStr})`));
+      }
+      if (newHotspots.length > displayCount) {
+        lines.push(chalk.gray(`  ... +${newHotspots.length - displayCount} more`));
+      }
+    }
+    if (resolvedHotspots.length > 0) {
+      for (let i = 0; i < Math.min(resolvedHotspots.length, displayCount); i++) {
+        const h = resolvedHotspots[i];
+        const deltaStr = (h.delta ?? 0) > 0 ? `+${(h.delta ?? 0).toFixed(3)}` : (h.delta ?? 0).toFixed(3);
+        lines.push(chalk.green(`  - ${h.file} (${deltaStr})`));
+      }
+      if (resolvedHotspots.length > displayCount) {
+        lines.push(chalk.gray(`  ... -${resolvedHotspots.length - displayCount} more`));
+      }
+    }
     lines.push('');
-    lines.push(chalk.red('New Hotspots:'));
-    const displayCount = Math.min(result.hotspotChanges.newHotspots.length, maxDisplayHotspots);
-    for (let i = 0; i < displayCount; i++) {
-      const hotspot = result.hotspotChanges.newHotspots[i];
-      const delta = hotspot.delta ?? 0;
-      const deltaStr = delta > 0 ? `+${delta.toFixed(3)}` : delta.toFixed(3);
-      lines.push(chalk.red(`+ ${hotspot.file}  (${deltaStr})`));
-    }
-    const remaining = result.hotspotChanges.newHotspots.length - maxDisplayHotspots;
-    if (remaining > 0) {
-      lines.push('');
-      lines.push(chalk.gray(`(+${remaining} more files entered hotspot zone)`));
-    }
   }
-  
-  if (result.hotspotChanges?.resolvedHotspots?.length > 0) {
-    lines.push('');
-    lines.push(chalk.green('Resolved Hotspots:'));
-    const displayCount = Math.min(result.hotspotChanges.resolvedHotspots.length, maxDisplayHotspots);
-    for (let i = 0; i < displayCount; i++) {
-      const hotspot = result.hotspotChanges.resolvedHotspots[i];
-      const delta = hotspot.delta ?? 0;
-      const deltaStr = delta > 0 ? `+${delta.toFixed(3)}` : delta.toFixed(3);
-      lines.push(chalk.green(`- ${hotspot.file}  (${deltaStr})`));
-    }
-    const remaining = result.hotspotChanges.resolvedHotspots.length - maxDisplayHotspots;
-    if (remaining > 0) {
-      lines.push('');
-      lines.push(chalk.gray(`(+${remaining} more files exited hotspot zone)`));
-    }
-  }
-  
-  if (!result.hotspotChanges?.newHotspots?.length && !result.hotspotChanges?.resolvedHotspots?.length) {
-    lines.push(chalk.gray('  No hotspot changes detected'));
-  }
-  lines.push('');
-  lines.push(chalk.gray('----------------------------------------'));
   
   // Summary
-  lines.push('');
   lines.push(chalk.bold.cyan('Summary:'));
   const summary = generateDriftSummary(result);
   for (const line of summary) {
     lines.push(chalk.gray(line));
   }
-  lines.push('');
   
   console.log(lines.join('\n'));
 }
@@ -221,44 +281,36 @@ function generateDriftSummary(result: any): string[] {
   
   const riskIncreased = result.riskChanges?.increasedCount ?? 0;
   const riskDecreased = result.riskChanges?.decreasedCount ?? 0;
-  if (riskIncreased > riskDecreased) {
-    signals.push('- Risk levels are increasing');
-  } else if (riskDecreased > riskIncreased) {
-    signals.push('- Risk levels are decreasing');
+  if (riskIncreased > 0 || riskDecreased > 0) {
+    signals.push(`- Risk: ${riskIncreased} up, ${riskDecreased} down`);
   }
   
   const impactIncreased = result.impactChanges?.increasedCount ?? 0;
   const impactDecreased = result.impactChanges?.decreasedCount ?? 0;
-  if (impactIncreased > impactDecreased) {
-    signals.push('- Blast radius is growing');
-  } else if (impactDecreased > impactIncreased) {
-    signals.push('- Blast radius is shrinking');
+  if (impactIncreased > 0 || impactDecreased > 0) {
+    signals.push(`- Impact: ${impactIncreased} wider, ${impactDecreased} narrower`);
+  }
+  
+  const newEdges = result.dependencyChanges?.newEdges ?? 0;
+  const removedEdges = result.dependencyChanges?.removedEdges ?? 0;
+  if (newEdges > 0 || removedEdges > 0) {
+    signals.push(`- Edges: ${newEdges} added, ${removedEdges} removed`);
   }
   
   const newCycles = result.cycleChanges?.newCycles?.length ?? 0;
   const resolvedCycles = result.cycleChanges?.resolvedCycles?.length ?? 0;
-  if (newCycles > resolvedCycles) {
-    signals.push('- Circular dependencies are increasing');
-  } else if (resolvedCycles > newCycles) {
-    signals.push('- Circular dependencies are being resolved');
-  }
-  
-  const newEdges = result.dependencyChanges?.newEdges ?? 0;
-  if (newEdges > 100) {
-    signals.push('- Significant structural changes detected');
+  if (newCycles > 0 || resolvedCycles > 0) {
+    signals.push(`- Cycles: ${newCycles} new, ${resolvedCycles} resolved`);
   }
   
   const newHotspots = result.hotspotChanges?.newHotspots?.length ?? 0;
   const resolvedHotspots = result.hotspotChanges?.resolvedHotspots?.length ?? 0;
-  if (newHotspots > 0) {
-    signals.push(`- ${newHotspots} new architectural hotspots detected`);
-  }
-  if (resolvedHotspots > 0) {
-    signals.push(`- ${resolvedHotspots} hotspots resolved`);
+  if (newHotspots > 0 || resolvedHotspots > 0) {
+    signals.push(`- Hotspots: ${newHotspots} entered, ${resolvedHotspots} exited`);
   }
   
   if (signals.length === 0) {
-    return ['- No significant architectural drift detected'];
+    return ['- No changes detected'];
   }
   
   return signals;
@@ -302,20 +354,13 @@ export function outputSnapshotHistory(snapshots: any, format: OutputFormat = Out
       headers: ["snapshot_id", "created_at", "commit_hash", "total_files", "cycle_count", "branch"]
     });
   } else if (format === OutputFormat.TEXT) {
-    // Simple list format for TEXT
     for (const s of snapshots) {
-      console.log(`- id: ${s.id}`);
-      console.log(`  repo_id: ${s.repo_id}`);
-      console.log(`  git_remote_url: ${s.git_remote_url ?? 'null'}`);
-      console.log(`  branch: ${s.branch ?? 'null'}`);
-      console.log(`  commit_hash: ${s.commit_hash ?? 'null'}`);
-      console.log(`  working_tree_dirty: ${s.working_tree_dirty}`);
-      console.log(`  total_files: ${s.total_files}`);
-      console.log(`  cycle_count: ${s.cycle_count}`);
-      console.log(`  created_at: ${s.created_at}`);
+      const date = s.created_at instanceof Date ? s.created_at.toISOString().split('T')[0] : String(s.created_at).split('T')[0];
+      const commit = s.commit_hash ? s.commit_hash.substring(0, 7) : 'null';
+      const dirty = s.working_tree_dirty ? ' (dirty)' : '';
+      console.log(`  ${s.id}  ${date}  ${commit}  files:${s.total_files ?? '-'}  cycles:${s.cycle_count ?? '-'}  ${s.branch ?? 'null'}${dirty}`);
     }
   } else {
-    // TABLE format
     const headers = [
       "snapshot_id",
       "created_at",

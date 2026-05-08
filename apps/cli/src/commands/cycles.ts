@@ -11,7 +11,6 @@ export default new Command()
   .action(async (options: { repo?: string; output?: string }) => {
     const format = parseOutputFormat(options.output);
     
-    // Disable progress for JSON output
     progress.setEnabled(format !== OutputFormat.JSON);
     
     try {
@@ -20,11 +19,12 @@ export default new Command()
       
       const result = await detectRepositoryCycles(options.repo || process.cwd(), progressEmitter);
       
-      console.log(''); // Add spacing after progress
+      console.log('');
       
       outputCycles(result, format);
     } catch (error) {
       progress.failSpinner('Cycle detection failed');
-      throw error;
+      console.error((error as Error).message);
+      process.exitCode = 1;
     }
   });
