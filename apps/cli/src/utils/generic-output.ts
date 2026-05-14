@@ -10,8 +10,13 @@ const packageJson = JSON.parse(
 export function getBanner(): string {
   return [
     '',
-    chalk.bold.cyan(' ◈ REPOSTEM ') + chalk.gray(`v${packageJson.version}`),
-    chalk.gray(' Structural Risk Analysis Tool'),
+    chalk.bold.cyan(' ____  _____ ____   ___  ____ _____ _____ __  __ '),
+    chalk.bold.cyan('|  _ \\| ____|  _ \\ / _ \\/ ___|_   _| ____|  \\/  |'),
+    chalk.bold.cyan('| |_) |  _| | |_) | | | \\___ \\ | | |  _| | |\\/| |'),
+    chalk.bold.cyan('|  _ <| |___|  __/| |_| |___) || | | |___| |  | |'),
+    chalk.bold.cyan('|_| \\_\\_____|_|    \\___/|____/ |_| |_____|_|  |_|'),
+    '',
+    chalk.gray(`  Structural Risk Analysis Tool (v${packageJson.version})`),
     ''
   ].join('\n');
 }

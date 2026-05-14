@@ -143,7 +143,8 @@ export function outputDrift(result: any, format: OutputFormat = OutputFormat.TEX
   lines.push(chalk.bold.red('Risk Changes:'));
   const riskIncreased = result.riskChanges?.increasedCount ?? 0;
   const riskDecreased = result.riskChanges?.decreasedCount ?? 0;
-  lines.push(chalk.gray(`  +${riskIncreased} / -${riskDecreased} files changed`));
+  lines.push(chalk.gray(`  - ${riskIncreased} file${riskIncreased !== 1 ? 's' : ''} increased risk level`));
+  lines.push(chalk.gray(`  - ${riskDecreased} file${riskDecreased !== 1 ? 's' : ''} decreased risk level`));
   
   const riskItems = result.riskChanges?.items ?? [];
   const displayRiskItems = riskItems.slice(0, DRIFT_MAX_ITEMS);
@@ -200,7 +201,8 @@ export function outputDrift(result: any, format: OutputFormat = OutputFormat.TEX
   const resolvedCycles = result.cycleChanges?.resolvedCycles ?? [];
   if (newCycles.length > 0 || resolvedCycles.length > 0) {
     lines.push(chalk.bold.hex('#FFA500')('Cycle Changes:'));
-    lines.push(chalk.gray(`  +${newCycles.length} / -${resolvedCycles.length} cycles`));
+    lines.push(chalk.gray(`  - ${newCycles.length} new cyclic group${newCycles.length !== 1 ? 's' : ''} detected`));
+    lines.push(chalk.gray(`  - ${resolvedCycles.length} cycle${resolvedCycles.length !== 1 ? 's' : ''} resolved`));
     for (const cycle of newCycles) {
       const nodes = cycle.nodes ?? [];
       const displayNodes = nodes.slice(0, DRIFT_MAX_CYCLE_FILES);
