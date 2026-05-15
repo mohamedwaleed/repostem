@@ -26,12 +26,14 @@ export default new Command()
     "--no-branch-filter",
     "Show snapshots from every branch (overrides branch detection)"
   )
+  .option("-o, --output <format>", "Output format (text, json)", "text")
   .option("--since <id>", "Snapshot ID to compare against (from history)")
   .action(async (question: string, options: {
     repo?: string;
     branch?: string;
     noBranchFilter?: boolean;
     since?: string;
+    output?: string;
   }) => {
     const format = parseOutputFormat(options.output);
     
