@@ -11,20 +11,18 @@ export default new Command()
   .action(async (options: { repo?: string; output?: string }) => {
     const format = parseOutputFormat(options.output);
     
-    // Disable progress for JSON output
     progress.setEnabled(format !== OutputFormat.JSON);
     
     try {
-      // Create progress emitter and attach to progress manager
       const progressEmitter = new ProgressEmitter();
       progress.attachToEmitter(progressEmitter);
       
       const result = await analyzeRepository(options.repo || process.cwd(), progressEmitter);
       
-      console.log(''); // Add spacing after progress
+      console.log('');
       
       if (result.warning) {
-        console.warn(`⚠️  Warning: ${result.warning}\n`);
+        console.warn(`\n⚠ Warning: ${result.warning}\n`);
       }
       
       outputProjectAnalysis(result.analysis, format);
@@ -34,6 +32,7 @@ export default new Command()
       }
     } catch (error) {
       progress.failSpinner('Analysis failed');
-      throw error;
+      console.error((error as Error).message);
+      process.exitCode = 1;
     }
   });

@@ -77,6 +77,8 @@ export interface ProjectAnalysisResult {
   topCentralFiles: RankedFile[];
   topRiskFiles: RankedFile[];
   highChurnFiles: RankedFile[];
+  branch?: string | null;
+  dirty?: boolean;
 }
 
 export interface FileRiskResult {

@@ -77,10 +77,13 @@ export class AnalysisTextFormatter implements GenericOutputFormatter {
   format(data: any, context?: any): string {
     const sections: string[] = [];
 
-    // RepoStem Banner (using reusable function)
     sections.push(getBanner());
-    sections.push(chalk.bold.cyan('RepoStem Structural Analysis'));
+    
+    const branchInfo = data.branch ? chalk.blue(data.branch) : chalk.gray('unknown branch');
+    const dirtyStatus = data.dirty ? chalk.red(' (dirty working tree)') : '';
+    sections.push(`${chalk.bold('Target:')} ${branchInfo}${dirtyStatus}`);
     sections.push("");
+
     sections.push(chalk.gray(`Files analyzed: ${data.totalFiles || 0}`));
     sections.push(chalk.gray(`Internal dependencies: ${data.totalDependencies || 0}`));
     sections.push(chalk.gray(`Circular dependency groups: ${data.cycleCount || 0}`));
@@ -88,34 +91,35 @@ export class AnalysisTextFormatter implements GenericOutputFormatter {
 
     if (data.topCentralFiles?.length > 0) {
       sections.push(chalk.bold.magenta("Top 5 Most Central Files:"));
-      data.topCentralFiles.forEach((item: any, index: number) => {
+      data.topCentralFiles.slice(0, 5).forEach((item: any, index: number) => {
         const score = (item.score || 0).toFixed(2);
         const classification = classify(item.score || 0);
         const coloredScore = getCentralityColor(item.score || 0)(`${score} - ${classification.toLowerCase()}`);
-        sections.push(`${chalk.gray(index + 1)}. ${chalk.white(item.file)} (${chalk.cyan(getMetricLabel('centrality').toLowerCase())}: ${coloredScore})`);
+        sections.push(`${chalk.gray(index + 1)}. ${chalk.white(item.file)} (${coloredScore})`);
       });
       sections.push("");
     }
 
     if (data.topRiskFiles?.length > 0) {
       sections.push(chalk.bold.red("Top 5 Highest Risk Files:"));
-      data.topRiskFiles.forEach((item: any, index: number) => {
+      data.topRiskFiles.slice(0, 5).forEach((item: any, index: number) => {
         const score = (item.score || 0).toFixed(2);
         const classification = classify(item.score || 0);
         const coloredScore = getRiskColor(item.score || 0)(`${score} - ${classification.toLowerCase()}`);
-        sections.push(`${chalk.gray(index + 1)}. ${chalk.white(item.file)} (${chalk.red(getMetricLabel('riskScore').toLowerCase())}: ${coloredScore})`);
+        sections.push(`${chalk.gray(index + 1)}. ${chalk.white(item.file)} (${coloredScore})`);
       });
       sections.push("");
     }
 
-    if (data.highChurnFiles?.length > 0) {
+    const activeChurn = (data.highChurnFiles || []).filter((f: any) => f.score > 0);
+    if (activeChurn.length > 0) {
       sections.push(chalk.bold.hex('#FFA500')("High Churn Files (Last 6 months):"));
-      data.highChurnFiles.forEach((item: any) => {
+      activeChurn.slice(0, 5).forEach((item: any) => {
         const churnScore = item.score || 0;
         const churnPercent = Math.round(churnScore * 100);
         const classification = classify(churnScore);
-        const coloredChurn = getChurnColor(churnScore)(`${classification.toLowerCase()} churn`);
-        sections.push(`${chalk.gray('-')} ${chalk.white(item.file)} (${chalk.hex('#FFA500')(`${churnPercent}%`)} - ${coloredChurn})`);
+        const coloredChurn = getChurnColor(churnScore)(`${classification.toLowerCase()}`);
+        sections.push(`${chalk.gray('-')} ${chalk.white(item.file)} (${chalk.hex('#FFA500')(`${churnPercent}%`)} ${coloredChurn})`);
       });
       sections.push("");
     }
@@ -123,7 +127,7 @@ export class AnalysisTextFormatter implements GenericOutputFormatter {
     if (data.architectureSignals && data.architectureSignals.length > 0) {
       sections.push(chalk.bold.yellow("Architecture Signals:"));
       data.architectureSignals.forEach((signal: string) => {
-        sections.push(`${chalk.gray('-')} ${chalk.yellow(signal)}`);
+        sections.push(`${chalk.gray('•')} ${chalk.yellow(signal)}`);
       });
     }
 
